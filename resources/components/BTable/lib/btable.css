@@ -1,0 +1,219 @@
+/************************* CONTEXT MENU *************************/
+
+.data-title:before {
+    content: attr(data-menutitle);
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: #DDD;
+    padding: 2px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.data-title :first-child {
+    margin-top: 20px;
+}
+
+.menu-with-title > li:first-child {
+    cursor: default;
+    background-color: #EEE;
+}
+
+.menu-with-title > li:first-child ~ li:first-child {
+    cursor: pointer;
+    background-color: #39F;
+}
+
+.context-menu-item label {
+	font-weight: normal;
+}
+
+
+/******************** FILTERS PANEL ********************/
+
+.filtersPanel {
+	margin-bottom: 10px;
+}
+
+.filtersPanel .filtersTitle {
+	font-weight: bold;
+	color: black;
+}
+
+.filtersPanel .hierarchy {
+	font-weight: bold;
+	color: blue;
+}
+
+.filtersPanel .separator {
+	font-weight: normal;
+	color: blue;
+}
+
+.filtersPanel .level {
+	font-weight: bold;
+	color: red;
+}
+
+.filtersPanel .filter {
+	font-weight: normal;
+}
+
+img.sortIcon {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+img.lockedIcon {
+	width: 10px;
+	height: 12px;
+}
+
+img.unlockedIcon {
+	width: 14px;
+	height: 12px;
+}
+
+
+/******************** FILTERS SELECTOR PANEL ********************/
+
+#filtersSelectorPanel {
+	width: 850px;
+	height: 500px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+#filtersSelectorPanel .topBox {
+	width: 100%; 
+	height: 6%;
+}
+
+#filtersSelectorPanel .topBoxLeft {
+	width: 36%;
+	height: 100%;
+	float: left; 
+}
+
+#filtersSelectorPanel .topBoxRight {
+	width: 60%;
+	height: 100%;
+	float: left; 
+	padding-left: 4%;
+}
+
+#filtersSelectorPanel .centralBox {
+	width: 100%; 
+	height: 94%;
+}
+
+#filtersSelectorPanel .centralBoxLeft {
+	width: 36%;
+	height: 100%;
+	float: left; 
+	overflow: auto; 
+}
+
+#filtersSelectorPanel .centralBoxRight {
+	width: 60%;
+	height: 100%;
+	float: left;
+	overflow: auto; 
+	padding-left: 4%;
+}
+
+.btTitle {
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.centralBoxLeft li {
+	padding: 3px;
+}
+
+.list-item-level {
+	cursor: pointer;
+}
+
+.list-item-selected {
+	padding: 3px;
+	border: 1px solid #AED0EA;
+	border-radius: 4px 4px 4px 4px;
+	background-color: #E6F2FB;
+}
+
+.filterModeBar {
+	width: 480px; 
+	margin-bottom: 30px;
+}
+.filterModeBar div {
+	float: left; 
+	margin-right: 16px;
+}
+
+.list-item-filterInfo {
+	font-style: italic;
+	color: red;
+	margin-left: 6px;
+}
+
+.updateFilterBar {
+	width: 480px;
+	text-align: right;
+	margin-top: 14px;
+}
+
+
+/******************** MDX PANEL ********************/
+
+.mdxPanel {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+
+/************************* TABLE *************************/
+
+.bTableComponent .dataTables_wrapper {
+    min-height:0;
+}
+.bTableComponent table {
+	border-collapse: collapse;
+}
+.bTableComponent th {
+    border: 1px solid #000;
+    background-color: #C3D9FF;
+} 
+.bTableComponent td {
+    border: 1px solid #000; 
+}
+.bTableComponent tbody tr.odd td {
+    background-color: #E2E4FF;
+}
+.bTableComponent tbody tr.even td {
+    background-color: #FFFFFF;
+}
+.bTableComponent td.string {
+    font-family: Arial, serif;
+    font-size: 12px;
+}
+.bTableComponent td.numeric {
+    font-family: Arial, serif;
+    font-size: 12px;
+    padding-right: 4px;
+}
+.bTableComponent td.subtotal {
+	font-weight: bold;
+}
+.bTableComponent tr.odd td.grandtotal,
+.bTableComponent tr.even td.grandtotal {
+    font-weight: bold;
+	background-color: #C3D9FF;
+}

@@ -1,0 +1,323 @@
+{
+ "layout": {
+  "title": "Render",
+  "rows": [
+   {
+    "id": "9eee59a9-0cd1-049c-5042-9ad2db54949d",
+    "type": "LayoutResourceCode",
+    "typeDesc": "Resource",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "css",
+      "type": "Id"
+     },
+     {
+      "name": "resourceType",
+      "value": "Css",
+      "type": "Label"
+     },
+     {
+      "name": "resourceCode",
+      "value": ".container {\n    margin-top: 20px;\n    margin-bottom: 20px;\n    margin-left: 30px;\n    margin-right: 30px;\n} ",
+      "type": "Resource"
+     }
+    ]
+   },
+   {
+    "id": "3f42a171-31a3-4b7e-a08c-f8c51511e046",
+    "type": "LayoutRow",
+    "typeDesc": "Row",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "BTableHtmlObject",
+      "type": "Id"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   }
+  ]
+ },
+ "components": {
+  "rows": [
+   {
+    "id": "COMMUNITYCOMPONENTS",
+    "name": "Community Contributions",
+    "type": "Label",
+    "typeDesc": "<i>Group</i>",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "value": "Community Contributions",
+      "type": "Label"
+     }
+    ]
+   },
+   {
+    "id": "e2bd5d67-b81b-34f8-a707-3048a7b7ee92",
+    "type": "ComponentsBTableComponent",
+    "typeDesc": "BTable (by Biz Tech)",
+    "parent": "COMMUNITYCOMPONENTS",
+    "properties": [
+     {
+      "name": "name",
+      "value": "BTable",
+      "type": "Id"
+     },
+     {
+      "name": "expandContainerObject",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "catalog",
+      "value": "",
+      "type": "MondrianCatalog"
+     },
+     {
+      "name": "jndi",
+      "value": "",
+      "type": "Jndi"
+     },
+     {
+      "name": "cube",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "dimensions",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "measures",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "pivotDimensions",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "filters",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "orderBy",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "measuresOnColumns",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "nonEmptyRows",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "nonEmptyColumns",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "grandTotal",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "subTotals",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "pivotGrandTotal",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "pivotSubTotals",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "showFilters",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "listeners",
+      "value": "[]",
+      "type": "Listeners"
+     },
+     {
+      "name": "oLanguage",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "expandParameters",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "paginate",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "filter",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "info",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "displayLength",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "lengthChange",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "expandOnClick",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "colSearchable",
+      "value": "[]",
+      "type": "Array"
+     },
+     {
+      "name": "drawCallback",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "sDom",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "priority",
+      "value": 5,
+      "type": "Integer"
+     },
+     {
+      "name": "refreshPeriod",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "paginationType",
+      "value": "two_button",
+      "type": "PaginationType"
+     },
+     {
+      "name": "tableStyle",
+      "value": "classic",
+      "type": "TableStyle"
+     },
+     {
+      "name": "htmlObject",
+      "value": "${p:BTableHtmlObject}",
+      "type": "HtmlObject"
+     },
+     {
+      "name": "paginateServerside",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "executeAtStart",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "preExecution",
+      "value": "function() {\n    var urlQuery = getURLQuery();\n        \n    var btdefObj = JSON.parse(urlQuery.btdef);\n\n    this.catalog = (btdefObj.catalog) ? btdefObj.catalog : \"\";\n    this.jndi = (btdefObj.jndi) ? btdefObj.jndi : \"\";\n    this.cube = (btdefObj.cube) ? btdefObj.cube : \"\";\n    this.dimensions = (btdefObj.dimensions) ? btdefObj.dimensions : [];\n    this.measures = (btdefObj.measures) ? btdefObj.measures : [];\n    this.pivotDimensions = (btdefObj.pivotDimensions) ? btdefObj.pivotDimensions : [];\n    this.filters = (btdefObj.filters) ? btdefObj.filters : [];\n    this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;\n    this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;\n    this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;\n    this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;\n    this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;\n\tthis.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;\n\tthis.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;\n\tthis.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : \"bottom\";\n\tthis.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;\n    \n    return true;\n}",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postFetch",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postExecution",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "preChange",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postChange",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "tooltip",
+      "value": "",
+      "type": "Html"
+     },
+     {
+      "name": "extraOptions",
+      "value": "[]",
+      "type": "OptionArray"
+     },
+     {
+      "name": "clickAction",
+      "value": "",
+      "type": "JavaScript"
+     }
+    ]
+   }
+  ]
+ },
+ "datasources": {
+  "rows": []
+ },
+ "filename": "/system/BTable/dashboards/Render.cdfde"
+}

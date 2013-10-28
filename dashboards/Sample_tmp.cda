@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDADescriptor>
+   <DataSources>
+      <Connection id="territoriesQuery" type="mondrian.jndi">
+         <Catalog>steel-wheels/analysis/steelwheels.mondrian.xml</Catalog>
+         <Jndi>SampleData</Jndi>
+      </Connection>
+   </DataSources>
+   <DataAccess access="public" cache="true" cacheDuration="3600" connection="territoriesQuery"
+               id="territoriesQuery"
+               type="mdx">
+      <BandedMode>compact</BandedMode>
+      <Columns/>
+      <Parameters/>
+      <Query>select 
+    NON EMPTY {[Measures].[Sales]} ON COLUMNS,
+    NON EMPTY Order({[Markets].[All Markets].Children}, [Markets].CurrentMember.Name, ASC) ON ROWS
+from [SteelWheelsSales]</Query>
+   </DataAccess>
+</CDADescriptor>
