@@ -1,0 +1,83 @@
+body {
+    background: #FFFFFF;
+}
+
+.btableWrapper {
+	width: 950px;
+	margin-right: auto;
+  	margin-left: auto;
+}
+
+
+.btableHeader {
+	width: 100%;
+    height: 70px;
+    position: relative;
+    display: block;
+    overflow: hidden;
+  	margin-top: 14px;
+  	margin-bottom: 14px;
+}
+
+.btableLogo {
+	width: 22%;
+	height: 100%;
+	float: left;
+}
+
+.btableText {
+	width: 35%;
+	height: 100%;
+	line-height: 70px;
+	float: left;
+	text-align: left;
+	font-size: 18px;
+	font-family: Tahoma;
+}
+
+.btableVersion {
+	width: 9%;
+	height: 100%;
+	line-height: 70px;
+	float: left;
+	text-align: left;
+	font-size: 13px;
+	font-family: Tahoma;
+}
+
+.btableLicense {
+	width: 10%;
+	height: 100%;
+	line-height: 70px;
+	float: left;
+	text-align: left;
+	font-size: 13px;
+	font-family: Tahoma;
+}
+
+.biztechLogo {
+	width: 24%;
+	height: 100%;
+	float: left;
+}
+
+.btableLogo a {
+  	width: 100%;
+	height: 100%;
+	display: block;
+  	background: url('../img/btable.png') 0px 50% no-repeat transparent;
+}
+
+.biztechLogo a {
+  	height: 100%;
+  	width: 100%;
+  	display: block;
+  	background: url('../img/biztech.png') right 50% no-repeat transparent;
+}
+
+.btableContent {
+	width: 948;
+	font-size: 14px;
+	border: 1px solid #6BB12C;
+	border-radius: 0px 0px 6px 6px;
+}

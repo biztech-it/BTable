@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>BTable</title>
+        <meta name="keywords" content="" />
+        <meta name="description" content="" />
+        @HEADER@        
+        <link rel="stylesheet" type="text/css" href="static/custom/css/cpk.css" />
+        <link rel="stylesheet" type="text/css" href="static/custom/css/BTable.css" />
+        <script language="javascript" type="text/javascript" src="static/custom/js/BTable.js"></script>
+    </head>
+    <body>
+        <div class="btableWrapper">
+	    	<div class="btableHeader">
+	    		<div class="btableLogo">
+		        	<a href="about"></a>
+	    		</div>
+	    		<div class="btableText">
+	    			<p>A Drill-Anywhere Component For CDE</p>
+	    		</div>
+	    		<div class="btableVersion">
+	    			<p>Ver. <span>&nbsp;</span></p>
+	    		</div>
+                <div class="btableLicense">
+                    <p>Lic. <a href="http://www.mozilla.org/MPL/2.0/" target="_blank">MPL 2.0</a></p>
+                </div>
+	    		<div class="biztechLogo">
+	    			<a href="http://www.biztech.it" target="_blank" title="www.biztech.it"></a>
+	    		</div>
+	    	</div>
+            <div id='cpkSiteMapObj' class='cpkNavigation'>
+                <script type="text/javascript">
+                    var siteMapParameter = [
+	                    {
+	                      name: "About",
+	                      link: "about"
+	                    },
+	                    {
+	                      name: "Data Sources",
+	                      link: "datasources"
+	                    },
+	                    {
+	                      name: "Sample",
+	                      link: "sample"
+	                    },
+	                    {
+	                      name: "Analyzer",
+	                      link: "analyzer"
+	                    }
+					];
+
+                	var siteMapSelectedParameter = "";
+                	var contextFile = Dashboards.getParameterValue("Dashboards.context.file");
+                	if(contextFile == "About.wcdf")
+                		siteMapSelectedParameter = "About";
+                	else if(contextFile == "Datasources.wcdf")
+                		siteMapSelectedParameter = "Data Sources";
+                	else if(contextFile == "Sample.wcdf")
+                		siteMapSelectedParameter = "Sample";
+                	else if(contextFile == "Analyzer.wcdf")
+                		siteMapSelectedParameter = "Analyzer";
+
+                	var render_cpkSiteMap = {
+                        type: "siteMap",
+                        name: "render_cpkSiteMap",
+                        siteMapParameter: "siteMapParameter",
+                        siteMapSelectedParameter: "siteMapSelectedParameter",
+                        priority: 2,
+                        parameters: [],
+                        executeAtStart: true,
+                        htmlObject: "cpkSiteMapObj",
+                        listeners: []
+                    };
+
+                    var render_getPluginVersion = {
+                        type: "Query",
+                        name: "render_getPluginVersion",
+                        priority: 1,
+                        parameters: [],
+                        executeAtStart: true,
+                        listeners: [],
+                        htmlObject: "${p:}",
+                        postFetch: function f(data){
+                            if(!_.isEmpty(data)){
+                                var obj = {};
+                                _.each( data.metadata, function(el,idx){
+                                    obj[el.colName] = data.resultset[0][idx];
+                                });
+
+                                $(".btableVersion p span").text(obj.version);
+                            }
+                        },
+                        queryDefinition:  {
+                            endpoint: "getPluginVersion",
+                            pluginId: "BTable",
+                            queryType: "cpk"
+                        }
+                    };
+
+                    Dashboards.addComponents([render_cpkSiteMap, render_getPluginVersion]);
+                </script>
+            </div>
+            <div id="content" class="btableContent">
+                @CONTENT@
+            </div>
+            <div class="cpkFooter">
+                @FOOTER@
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,381 @@
+{
+ "layout": {
+  "title": "CDF - Sample structure",
+  "rows": [
+   {
+    "id": "be0c04bd-8f1f-df7f-7757-ee5545c5b58d",
+    "type": "LayoutResourceCode",
+    "typeDesc": "Resource",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "css",
+      "type": "Id"
+     },
+     {
+      "name": "resourceType",
+      "value": "Css",
+      "type": "Label"
+     },
+     {
+      "name": "resourceCode",
+      "value": ".container {\n    width: 500px;\n    padding: 40px;\n    margin: auto;   \n}\n\n#header {\n    padding-bottom: 12px;\n}\n\n#logo a {\n    width: 185px;\n    height: 70px;\n\tdisplay: block;\n  \tbackground: url('../../../api/repos/BTable/static/custom/img/btable.png') 0px 50% no-repeat transparent;\n}\n\n.title {\n    font-family: Tahoma, Arial, sans-serif;\n    font-size: 24px;\n    line-height: 68px;\n    letter-spacing: 1px;\n}\n\n.label {\n    padding-top: 8px;\n    padding-bottom: 4px;\n    padding-left: 2px;\n    font-size: 13px;\n    font-weight: bold;\n    color: #404040;\n}\n\n.loadingIcon {\n    width: 24px;\n    height: 8px;\n    margin-left: 4px;\n    display: none;\n}\n\n#buttons {\n    padding-top: 16px;\n    text-align: center;\n}\n\nselect {\n    width: 500px;\n}\n\nbutton {\n    padding: 6px;\n    background-color: #F6F7F8;\n    border: 1px solid #AAAAAA;\n    border-radius: 4px 4px 4px 4px;\n    cursor: pointer;\n    font-family: Arial, sans-serif;\n    font-size: 13px;\n    font-weight: bold;\n    color: #444444;\n}\n\nbutton:hover {\n    border-color: #5897FB;\n    color: #5897FB;\n}\n\n#message {\n    padding-left: 4px;\n    font-size: 13px;\n    font-weight: normal;\n    color: red;    \n} ",
+      "type": "Resource"
+     }
+    ]
+   },
+   {
+    "id": "08361e7e-0b9d-6966-9cab-5c78c69c48b3",
+    "type": "LayoutResourceCode",
+    "typeDesc": "Resource",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "js",
+      "type": "Id"
+     },
+     {
+      "name": "resourceType",
+      "value": "Javascript",
+      "type": "Label"
+     },
+     {
+      "name": "resourceCode",
+      "value": "var catalogs = [];\nvar cubes = [];\n\nfunction getCubeStructure(catalog, cube, jndi) {\n    \n    var cubeStructure = null;\n    \n    $.ajax({\n        type: \"GET\",\n        url: Dashboards.getWebAppPath() + \"/plugin/pentaho-cdf-dd/api/olap/getCubeStructure\",\n        data: {\n            catalog: catalog,\n            cube: cube,\n            jndi: jndi\n        },\n        dataType: \"json\",\n        success: function(json) {\n            if(json && json.status == \"true\" && json.result) {\n                if(json.result.dimensions && json.result.measures)\n                    cubeStructure = json.result;\n            }\n        },\n        async: false\n    });\n    \n    return cubeStructure;\n    \n}\n\nfunction updateDimensionAndMeasureSelectors(catalogName, cubeName) {\n        \n    var catalog = catalogs[catalogName]; \n    \n    if(cubes[catalogName + \"::\" + cubeName] === undefined) {\n        cubes[catalogName + \"::\" + cubeName] = getCubeStructure(catalog.schema, cubeName, catalog.jndi);\n    }\n    \n    var cube = cubes[catalogName + \"::\" + cubeName];\n        \n    if(cube !== null) {\n        \n        var measureSelectorObj = $(\"#measure\");\n        measureSelectorObj.empty();\n        \n        $.each(_.sortBy(cube.measures, function(e){return e.name;}), function(i, v) {\n            measureSelectorObj.append(\"<option value='\" + v.qualifiedName + \"'>\" + v.name + \"</option>\");            \n        });\n        \n        var dimensionSelectorObj = $(\"#dimension\");\n        dimensionSelectorObj.empty();\n        \n        $.each(_.sortBy(cube.dimensions, function(e){return e.name;}), function(i, v) {\n            var html = \"\";\n            var dimensionName = v.name;\n            \n            $.each(_.sortBy(v.hierarchies, function(e){return e.name;}), function(i, v) {\n                var hierarchyName = v.name;\n                if(hierarchyName.indexOf(\".\") > 0) {\n                    var parts = hierarchyName.split(\".\");\n                    if(parts[0] == parts[1])\n                        hierarchyName = parts[0];\n                }\n                \n                html += \"<optgroup label='\" + dimensionName + \" :: \" + hierarchyName + \"'>\";\n                \n                $.each(v.levels, function(i, v) {\n                    html += \"<option value='\" + v.qualifiedName + \"'>\" + v.name + \"</option>\";\n                });\n                \n                html += \"</optgroup>\";\n            });\n                        \n            dimensionSelectorObj.append(html);            \n        });\n        \n        measureSelectorObj.trigger(\"liszt:updated\");\n        $(\"#measureLoadingIcon\").hide();\n        \n        dimensionSelectorObj.trigger(\"liszt:updated\");\n        $(\"#dimensionLoadingIcon\").hide();\n        \n    }\n\n}\n\nfunction updateCubeSelector(catalogName) {\n    \n    var catalog = catalogs[catalogName];\n    \n    $(\"#message\").html(\"\");\n    \n    var datasourceExists = false;\n\n    $.ajax({\n        type: \"GET\",\n        url: Dashboards.getWebAppPath() + \"/plugin/BTable/api/listCdaDatasources\",\n        data: {},\n        dataType: \"json\",\n        success: function(json) {\n            if(json && json.resultset) {\n                var schema = catalog.schema;\n                var jndi = catalog.jndi;\n                $.each(json.resultset, function(i, v) {\n                    if(v[0] == schema && v[1] == jndi)\n                        datasourceExists = true;\n                });\n            }\n        },\n        async: false\n    });\n    \n    if(!datasourceExists) {\n        $(\"#message\").html(\"A BTable datasource for the selected catalog does not exists!\");\n    }\n    \n    var cubeSelectorObj = $(\"#cube\");\n    cubeSelectorObj.empty();\n    \n    var _cubes = _.sortBy(catalog.cubes, function(e){return e.name;});\n    \n    $.each(_cubes, function(i, v) {\n        cubeSelectorObj.append(\"<option value='\" + v.name + \"'>\" + v.name + \"</option>\");            \n    });\n    \n    cubeSelectorObj.trigger(\"liszt:updated\");\n    \n    $(\"#cubeLoadingIcon\").hide();\n    \n    if(_cubes.length > 0) {\n        updateDimensionAndMeasureSelectors(catalogName, _cubes[0].name);   \n    }\n    \n}\n\nfunction initSelectors(_catalogs) {\n        \n    var catalogSelectorObj = $(\"#catalog\");\n    \n    catalogSelectorObj.empty();\n    \n    _catalogs = _.sortBy(_catalogs, function(e){return e.name;});\n    \n    $.each(_catalogs, function(i, v) {\n        var name = v.name;\n        var jndi = v.jndi;\n        var schema = v.schema;\n        var cubes = v.cubes;\n        catalogs[name] = {\n            jndi: jndi,\n            schema: schema,\n            cubes: cubes\n        };\n        \n        catalogSelectorObj.append(\"<option value='\" + name + \"'>\" + name + \"</option>\");        \n    });\n    \n    $(\"#catalogLoadingIcon\").hide();\n    \n    updateCubeSelector(_catalogs[0].name);\n\n\n    catalogSelectorObj.change(function() {\n        $(\"#cubeLoadingIcon\").show();\n        $(\"#measureLoadingIcon\").show();\n        $(\"#dimensionLoadingIcon\").show();\n        \n        var selectedCatalogName = $(this).val();\n        updateCubeSelector(selectedCatalogName);\n    });\n\n    $(\"#cube\").change(function() {\n        $(\"#measureLoadingIcon\").show();\n        $(\"#dimensionLoadingIcon\").show();\n\n        var selectedCatalogName = catalogSelectorObj.val();\n        var selectedCubeName = $(this).val();\n        updateDimensionAndMeasureSelectors(selectedCatalogName, selectedCubeName);\n    });\n\n    $(\".chosen-select\").chosen();\n\n}\n\n$(document).ready(function() {\n    \n    $(\".loadingIcon\").show();\n    \n    $.ajax({\n        type: \"GET\",\n        url: Dashboards.getWebAppPath() + \"/plugin/pentaho-cdf-dd/api/olap/getCubes\",\n        data: {},\n        dataType: \"json\",\n        success: function(json) {\n            if(json && json.status == \"true\" && json.result) {\n                if(json.result.catalogs && json.result.catalogs.length > 0)\n                    initSelectors(json.result.catalogs);\n            } else {\n                $(\".loadingIcon\").hide();\n            }\n        },\n        async: true\n    });\n    \n    $(\"#open\").click(function() {\n        var selectedCatalogName = $(\"#catalog\").val();\n        var catalog = catalogs[selectedCatalogName];\n        \n\t\tvar bTableProp = {};\n\t\tbTableProp.catalog = catalog.schema;\n\t\tbTableProp.jndi = catalog.jndi;\n\t\tbTableProp.cube = $(\"#cube\").val();\n\t\tbTableProp.dimensions = [[$(\"#dimension\").val(), \"\"]];\n\t\tbTableProp.measures = [[$(\"#measure\").val(), \"\"]];\n\n        var url = Dashboards.getWebAppPath() + \"/plugin/BTable/api/render?btdef=\" + JSON.stringify(bTableProp);\n        window.open(url, \"_self\"/*\"_blank\"*/);        \n    });\n    \n});\n ",
+      "type": "Resource"
+     }
+    ]
+   },
+   {
+    "id": "ef2e3cc3-b4d0-744f-57e2-b756c52b7976",
+    "type": "LayoutRow",
+    "typeDesc": "Row",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "header",
+      "type": "Id"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "a7cd28a7-c705-f26d-657a-fbc15cf8438d",
+    "type": "LayoutColumn",
+    "typeDesc": "Column",
+    "parent": "ef2e3cc3-b4d0-744f-57e2-b756c52b7976",
+    "properties": [
+     {
+      "name": "name",
+      "value": "logo",
+      "type": "Id"
+     },
+     {
+      "name": "columnSpan",
+      "value": "7",
+      "type": "Integer"
+     },
+     {
+      "name": "columnPrepend",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "columnAppend",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "columnPrependTop",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnAppendBottom",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnBorder",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnBigBorder",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "0f8c8a9c-3167-267f-a65c-95ff6206e326",
+    "type": "LayoutHtml",
+    "typeDesc": "Html",
+    "parent": "a7cd28a7-c705-f26d-657a-fbc15cf8438d",
+    "properties": [
+     {
+      "name": "name",
+      "value": "",
+      "type": "Id"
+     },
+     {
+      "name": "html",
+      "value": "<a href=\"about\"></a> ",
+      "type": "Html"
+     },
+     {
+      "name": "fontSize",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "color",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "a4d9964b-c69c-30e1-24e1-3ba5b969fda5",
+    "type": "LayoutColumn",
+    "typeDesc": "Column",
+    "parent": "ef2e3cc3-b4d0-744f-57e2-b756c52b7976",
+    "properties": [
+     {
+      "name": "name",
+      "value": "title",
+      "type": "Id"
+     },
+     {
+      "name": "columnSpan",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "columnPrepend",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "columnAppend",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "columnPrependTop",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnAppendBottom",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnBorder",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "columnBigBorder",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "39394f52-e097-3c67-83d8-275c5338dd82",
+    "type": "LayoutHtml",
+    "typeDesc": "Html",
+    "parent": "a4d9964b-c69c-30e1-24e1-3ba5b969fda5",
+    "properties": [
+     {
+      "name": "name",
+      "value": "",
+      "type": "Id"
+     },
+     {
+      "name": "html",
+      "value": "Analyzer ",
+      "type": "Html"
+     },
+     {
+      "name": "fontSize",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "color",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "cssClass",
+      "value": "title",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "c0d9d08c-778f-b125-4cfe-39b0179c8b5b",
+    "type": "LayoutRow",
+    "typeDesc": "Row",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "form",
+      "type": "Id"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "id": "20cf992b-93bc-0b5a-1df0-206a03b36dad",
+    "type": "LayoutHtml",
+    "typeDesc": "Html",
+    "parent": "c0d9d08c-778f-b125-4cfe-39b0179c8b5b",
+    "properties": [
+     {
+      "name": "name",
+      "value": "",
+      "type": "Id"
+     },
+     {
+      "name": "html",
+      "value": "<div class=\"label\">Catalog <img id=\"catalogLoadingIcon\" class=\"loadingIcon\" src=\"../../../api/repos/BTable/static/custom/loading.gif\" /></div>\n<div>\n    <select id=\"catalog\" class=\"chosen-select\">\n        <option value=\"\"></option>\n    </select>\n</div>\n<div id=\"message\"></div>\n<div class=\"label\">Cube <img id=\"cubeLoadingIcon\" class=\"loadingIcon\" src=\"../../../api/repos/BTable/static/custom/img/loading.gif\" /></div>\n<div>\n    <select id=\"cube\" class=\"chosen-select\">\n        <option value=\"\"></option>\n    </select>\n</div>\n<div class=\"label\">Measure <img id=\"measureLoadingIcon\" class=\"loadingIcon\" src=\"../../../api/repos/BTable/static/custom/img/loading.gif\" /></div>\n<div>\n    <select id=\"measure\" class=\"chosen-select\">\n        <option value=\"\"></option>\n    </select>\n</div>\n<div class=\"label\">Dimension <img id=\"dimensionLoadingIcon\" class=\"loadingIcon\" src=\"../../../api/repos/BTable/static/custom/img/loading.gif\" /></div>\n<div>\n    <select id=\"dimension\" class=\"chosen-select\">\n        <option value=\"\"></option>\n    </select>\n</div>\n<div id=\"buttons\">\n    <button id=\"open\">Open</button>\n</div> ",
+      "type": "Html"
+     },
+     {
+      "name": "fontSize",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "color",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   }
+  ]
+ },
+ "components": {
+  "rows": []
+ },
+ "datasources": {
+  "rows": []
+ },
+ "filename": "/system/BTable/dashboards/Analyzer.cdfde"
+}
