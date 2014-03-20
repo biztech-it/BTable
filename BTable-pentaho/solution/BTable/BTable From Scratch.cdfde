@@ -1,0 +1,380 @@
+{
+ "layout": {
+  "title": "CDF - Sample structure",
+  "rows": [
+   {
+    "id": "64bbf8a3-c1eb-0fe2-c3e9-9f413dbfad3e",
+    "type": "LayoutResourceCode",
+    "typeDesc": "Resource",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "btableStyle",
+      "type": "Id"
+     },
+     {
+      "name": "resourceType",
+      "value": "Css",
+      "type": "Label"
+     },
+     {
+      "name": "resourceCode",
+      "value": ".container {margin-top: 20px; margin-bottom: 20px;}\n\n/******************** FILTERS PANEL ********************/\n.filtersPanel {margin-bottom: 10px;}\n.filtersPanel .filtersTitle {font-weight: bold; color: black;}\n.filtersPanel .hierarchy {font-weight: bold;color: #437C0D;}\n.filtersPanel .separator {font-weight: normal;color: #437C0D;}\n.filtersPanel .level {font-weight: bold; color: #D1380E;}\n.filtersPanel .filter {font-weight: normal;}\n\n/************************* TABLE ***********************/\n.bTableComponent .dataTables_wrapper {min-height:0;}\n.bTableComponent table {border-collapse: collapse;}\n.bTableComponent th {border: 1px solid #000; background-color: #A2E069;}\n.bTableComponent td {border: 1px solid #000;}\n.bTableComponent tbody tr.odd td {background-color: #FFFFFF;}\n.bTableComponent tbody tr.even td {background-color: #E8E8E8;}\n.bTableComponent .string {font-family: Arial, serif; font-size: 12px;}\n.bTableComponent .numeric {font-family: Arial, serif; font-size: 12px; padding-right: 4px;}\n.bTableComponent .subtotal {font-weight: bold;}\n.bTableComponent tr.even td.grandtotal, \n.bTableComponent tr.odd td.grandtotal {font-weight: bold; background-color: #A2E069;} ",
+      "type": "Resource"
+     }
+    ]
+   },
+   {
+    "id": "bb3c4260-034f-5861-36df-a8ddb2e8d0e6",
+    "type": "LayoutRow",
+    "typeDesc": "Row",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "value": "btableHtmlObj",
+      "type": "Id"
+     },
+     {
+      "name": "height",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "backgroundColor",
+      "value": "",
+      "type": "Color"
+     },
+     {
+      "name": "roundCorners",
+      "value": "",
+      "type": "RoundCorners"
+     },
+     {
+      "name": "textAlign",
+      "value": "",
+      "type": "TextAlign"
+     },
+     {
+      "name": "cssClass",
+      "value": "",
+      "type": "String"
+     }
+    ]
+   }
+  ]
+ },
+ "components": {
+  "rows": [
+   {
+    "id": "COMMUNITYCOMPONENTS",
+    "name": "Community Contributions",
+    "type": "Label",
+    "typeDesc": "<i>Group</i>",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "value": "Community Contributions",
+      "type": "Label"
+     }
+    ]
+   },
+   {
+    "id": "aeb682bb-c0ab-9259-3738-161075be268f",
+    "type": "ComponentsBTableComponent",
+    "typeDesc": "BTable (by Biz Tech)",
+    "parent": "COMMUNITYCOMPONENTS",
+    "properties": [
+     {
+      "name": "name",
+      "value": "btable",
+      "type": "Id"
+     },
+     {
+      "name": "expandContainerObject",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "file",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "tableSettingsFromFile",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "catalog",
+      "value": "steel-wheels/analysis/steelwheels.mondrian.xml",
+      "type": "MondrianCatalog"
+     },
+     {
+      "name": "jndi",
+      "value": "SampleData",
+      "type": "Jndi"
+     },
+     {
+      "name": "cube",
+      "value": "SteelWheelsSales",
+      "type": "String"
+     },
+     {
+      "name": "dimensions",
+      "value": "[[\"[Product].[Line]\",\"\"]]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "measures",
+      "value": "[[\"[Measures].[Sales]\",\"\"],[\"[Measures].[Quantity]\",\"\"]]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "pivotDimensions",
+      "value": "[[\"[Time].[Years]\",\"include_un:[[Time].[2004]]\"],[\"[Time].[Quarters]\",\"\"],[\"MEASURES\",\"\"]]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "filters",
+      "value": "[[\"[Markets].[Territory]\",\"include:market\"]]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "orderBy",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "measuresOnColumns",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "nonEmptyRows",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "nonEmptyColumns",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "grandTotal",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "subTotals",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "pivotGrandTotal",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "pivotSubTotals",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "hideSpans",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "showFilters",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "listeners",
+      "value": "[]",
+      "type": "Listeners"
+     },
+     {
+      "name": "oLanguage",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "expandParameters",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "paginate",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "filter",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "info",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "displayLength",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "lengthChange",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "expandOnClick",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "colSearchable",
+      "value": "[]",
+      "type": "Array"
+     },
+     {
+      "name": "drawCallback",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "sDom",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "priority",
+      "value": 5,
+      "type": "Integer"
+     },
+     {
+      "name": "refreshPeriod",
+      "value": "",
+      "type": "Integer"
+     },
+     {
+      "name": "paginationType",
+      "value": "two_button",
+      "type": "PaginationType"
+     },
+     {
+      "name": "tableStyle",
+      "value": "classic",
+      "type": "TableStyle"
+     },
+     {
+      "name": "htmlObject",
+      "value": "${p:btableHtmlObj}",
+      "type": "HtmlObject"
+     },
+     {
+      "name": "paginateServerside",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "executeAtStart",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "preExecution",
+      "value": "function f() {\n    this.exportStyle = { //table style for Excel\n        rules: [\n            {selector: \"table\", properties: [{name: \"border-collapse\", value: \"collapse\"}]},\n            {selector: \"th\", properties: [{name: \"border\", value: \"1px solid #000\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"td\", properties: [{name: \"border\", value: \"1px solid #000\"}]},\n            {selector: \"tbody tr.odd td\", properties: [{name: \"background-color\", value: \"#FFFFFF\"}]},\n            {selector: \"tbody tr.even td\", properties: [{name: \"background-color\", value: \"#E8E8E8\"}]},\n            {selector: \"td.string\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"12px\"}]},\n            {selector: \"td.numeric\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"12px\"}, {name: \"padding-right\", value: \"4px\"}]},\n            {selector: \"td.subtotal\", properties: [{name: \"font-weight\", value: \"bold\"}]},\n            {selector: \"tr.odd td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"tr.even td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \".filtersTitle\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"black\"}]},\n            {selector: \".hierarchy\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#437C0D\"}]},\n            {selector: \".separator\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"color\", value: \"#437C0D\"}]},\n            {selector: \".level\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#D1380E\"}]},\n            {selector: \".filter\", properties: [{name: \"font-weight\", value: \"normal\"}]}\n\t\t]\n\t};\n}\n",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postFetch",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postExecution",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "preChange",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "postChange",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "tooltip",
+      "value": "",
+      "type": "Html"
+     },
+     {
+      "name": "extraOptions",
+      "value": "[]",
+      "type": "OptionArray"
+     },
+     {
+      "name": "clickAction",
+      "value": "",
+      "type": "JavaScript"
+     }
+    ]
+   },
+   {
+    "id": "GENERIC",
+    "name": "Generic",
+    "type": "Label",
+    "typeDesc": "<i>Group</i>",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "value": "Generic",
+      "type": "Label"
+     }
+    ]
+   },
+   {
+    "id": "7881796f-8eee-4b3f-fc73-7eecc2adf134",
+    "type": "ComponentsParameter",
+    "typeDesc": "Simple parameter",
+    "parent": "GENERIC",
+    "properties": [
+     {
+      "name": "name",
+      "value": "market",
+      "type": "Id"
+     },
+     {
+      "name": "propertyValue",
+      "value": "EMEA",
+      "type": "String"
+     },
+     {
+      "name": "parameterViewRole",
+      "value": "unused",
+      "type": "parameterViewRoleCustom"
+     },
+     {
+      "name": "bookmarkable",
+      "value": "false",
+      "type": "Boolean"
+     }
+    ]
+   }
+  ]
+ },
+ "datasources": {
+  "rows": []
+ },
+ "filename": "/public/plugin-samples/BTable/BTable From Scratch.cdfde"
+}

@@ -19,10 +19,18 @@
 		<static-path url="/BTable/resources" localFolder="resources"/>
 	</static-paths>
 	<content-types>
-		<content-type>
+		<content-type type="btable" mime-type="text/html">
 			<title>BTable</title>
 			<description>A drill-anywhere component for CDE</description>
 			<company name="Biz Tech" url="http://www.biztech.it" logo="@PLUGIN_COMPANY_LOGO@"></company>
+            <operations>
+                <operation>
+                    <id>RUN</id>
+                </operation>
+                <operation>
+                    <id>NEWWINDOW</id>
+                </operation>
+            </operations>
 		</content-type>
 	</content-types>
 	<content-generator

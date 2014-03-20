@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="dev-lib/json-lib-2.3-custom.jar"/>
+	<classpathentry kind="lib" path="lib/cpf-core-REFACTOR-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/cpf-pentaho5-REFACTOR-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/cpk-core-TRUNK-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/cpk-pentaho5-TRUNK-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-mapper-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/commons-io-2.1.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/jersey-multipart-1.16.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/jsp-api-2.0.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/jsr311-api-1.1.1.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/mondrian-3.6.1.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/json-3.1.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/pentaho-connections-5.0.1-stable.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/pentaho-platform-api-5.0.1-stable.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/pentaho-platform-core-5.0.1-stable.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/pentaho-platform-extensions-5.0.1-stable.jar"/>
+	<classpathentry kind="lib" path="runtime-lib/eigenbase-xom-1.3.1.jar"/>
+	<classpathentry kind="output" path="bin/classes"/>
+</classpath>

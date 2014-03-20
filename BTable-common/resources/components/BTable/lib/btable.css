@@ -195,10 +195,10 @@ img.unlockedIcon {
     border: 1px solid #000; 
 }
 .bTableComponent tbody tr.odd td {
-    background-color: #E2E4FF;
+    background-color: #FFFFFF;
 }
 .bTableComponent tbody tr.even td {
-    background-color: #FFFFFF;
+    background-color: #E2E4FF;
 }
 .bTableComponent td.string {
     font-family: Arial, serif;
@@ -208,6 +208,7 @@ img.unlockedIcon {
     font-family: Arial, serif;
     font-size: 12px;
     padding-right: 4px;
+	white-space: nowrap;
 }
 .bTableComponent td.subtotal {
 	font-weight: bold;

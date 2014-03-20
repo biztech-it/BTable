@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Biz Tech (http://www.biztech.it). All rights reserved.
+ * Copyright 2013-2014 Biz Tech (http://www.biztech.it). All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
  * If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -81,7 +81,7 @@ var BTableComponent = UnmanagedComponent.extend({
   headerRows: undefined,
 
   getBTable: function() {
-    return this.bTable == undefined ? {} : this.bTable;
+    return this.bTable === undefined ? {} : this.bTable;
   },
 
   timer: undefined,
@@ -90,8 +90,91 @@ var BTableComponent = UnmanagedComponent.extend({
     var componentName = this.name.replace("render_", "");
 
     this.btParamName = componentName + "MdxQuery";
+	
+	var fileError = false;
+	
+	if(this.file) {
+		var filePath = this.file;
 
-    this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
+		if(filePath.length > 7 && filePath.indexOf(".btable", filePath.length - 7) != -1) {
+			var btdefObj = null;
+			
+			$.ajax({
+				type: "GET",
+				url: bt.helpers.general.getReadFileServiceUrl(filePath),
+				data: {},
+				dataType: "json",
+				success: function(json) {
+					if(json) {
+						btdefObj = json;
+					}
+				},
+				async: false
+			});
+
+			if(btdefObj != null) {			
+				var patches = {};
+				$.each(this.filters, function(i, v) {
+					patches[v[0]] = v[1];
+				});
+				
+				var applyPatches = function(jsonAxis) {
+					var newAxis = [];
+					$.each(jsonAxis, function(i, v) {
+						var level = v[0];
+						if(patches.hasOwnProperty(level)) {
+							v[1] = patches[level];
+							delete patches[level];
+						}
+						newAxis.push(v);
+					});
+					return newAxis;
+				}		
+
+				this.catalog = (this.catalog || !btdefObj.hasOwnProperty("catalog")) ? this.catalog : btdefObj.catalog;
+				this.jndi = (this.jndi || !btdefObj.hasOwnProperty("jndi")) ? this.jndi : btdefObj.jndi;
+				this.cube = (this.cube || !btdefObj.hasOwnProperty("cube")) ? this.cube : btdefObj.cube;
+				
+				this.dimensions = (btdefObj.hasOwnProperty("dimensions")) ? applyPatches(btdefObj.dimensions) : this.dimensions;
+				this.measures = (btdefObj.hasOwnProperty("measures")) ? btdefObj.measures : this.measures;
+				this.pivotDimensions = (btdefObj.hasOwnProperty("pivotDimensions")) ? applyPatches(btdefObj.pivotDimensions) : this.pivotDimensions;
+				this.filters = (btdefObj.hasOwnProperty("filters")) ? applyPatches(btdefObj.filters) : this.filters;
+				
+				for(var level in patches) {
+					var newFilter = [level, patches[level]];
+					this.filters.push(newFilter);
+				}
+				
+				if(this.tableSettingsFromFile) {
+					this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;
+					this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;
+					this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;
+					this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;
+					this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;
+					this.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;
+					this.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;
+					this.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : "bottom";
+					this.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;
+				}
+			} else {
+				console.error("ERROR       [BTable: " + this.name + "] Initialization with file has failed!" +
+				" Cause: NON-EXISTING FILE or WRONG PATH or ACCESS DENIED or INVALID CONTENT");
+				fileError = true;
+				this.error("BTableComponent can't be initialized with file");		
+			}
+		} else {
+			console.error("ERROR       [BTable: " + this.name + "] Initialization with file has failed! File extension must be .btable");
+			fileError = true;
+			this.error("BTableComponent can't be initialized with file");
+		}		
+	}
+	
+	if(!this.catalog || !this.jndi || !this.cube) {
+		console.error("ERROR       [BTable: " + this.name + "] Initialization has failed! Catalog, JNDI and cube are required");
+		if(!fileError) this.error("BTableComponent requires Catalog, Jndi and Cube");
+    }
+	
+	this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
 	
     this.bTable = new bt.components.BTable({
       componentName: this.name,
@@ -112,10 +195,19 @@ var BTableComponent = UnmanagedComponent.extend({
       pivotGrandTotal: this.pivotGrandTotal,
       pivotSubTotals: this.pivotSubTotals,
       //totalsPosition: this.totalsPosition.toLowerCase(),
+	  hideSpans: this.hideSpans,
       showFilters: this.showFilters,
-      exportStyle: this.exportStyle ? this.exportStyle : {}
+      exportStyle: this.exportStyle ? this.exportStyle : {},
+	  fixedHeader: this.fixedHeader === undefined ? true : this.fixedHeader,
+	  drillTarget: this.drillTarget !== undefined ? this.drillTarget : ((this.drillInPUC === undefined || this.drillInPUC) && typeof top.mantle_openTab !== "undefined" ? "NEW_TAB" : "NEW_WINDOW"),
+	  renderDashboard: this.renderDashboard === undefined ? false : this.renderDashboard
     });
 
+	if(!this.bTable.olapCube.getStructure()) {
+		console.error("ERROR       [BTable: " + this.name + "] Unable to get the cube structure! Cube name may be incorrect");
+		this.error("");
+    }
+	
     $("#" + this.htmlObject).addClass("bTableComponent");
   },
 
@@ -127,15 +219,16 @@ var BTableComponent = UnmanagedComponent.extend({
     if(!this.preExec()){
       return;
     }
-
+	
+	if(!this.htmlObject) {
+      return this.error("BTableComponent requires an htmlObject");
+    }	
+	
     if(!this.isInitialized) {
       this.init();
       this.isInitialized = true;
     }
-    
-    if(!this.htmlObject) {
-      return this.error("BTableComponent requires an htmlObject");
-    }
+	
     try{
       this.block();
       this.setup();
@@ -199,10 +292,18 @@ var BTableComponent = UnmanagedComponent.extend({
     cd.path = this.cda.path;
     cd.dataAccessId = this.cda.dataAccessId;
     
+	cd.colSearchable = [];
+    cd.filter = false;
+	cd.info = false;
+	cd.lengthChange = false;
+	cd.paginate = false;
+	cd.paginateServerside = false;
+	cd.paginationType = "two_button";
     cd.sort = false;    
-    
+	cd.tableStyle = "classic";
+	
     var myself = this;
-     
+    
     $("#"+this.htmlObject).contextMenu({
       selector: 'thead th',
       className: 'menu-with-title',
@@ -269,8 +370,6 @@ var BTableComponent = UnmanagedComponent.extend({
       sortOptions.push( col + (dir == "asc" ? "A" : "D"));
     }
     this.queryState.setSortBy(sortOptions);
-
-    myself.bTable.printFilters();
   },
 
   pagingCallback: function(url, params,callback,dataTable) {
@@ -323,6 +422,28 @@ var BTableComponent = UnmanagedComponent.extend({
         cd = this.chartDefinition,
         myself = this,
         handleAddIns = _.bind(this.handleAddIns,this);
+		
+	var measuresLevelColIdx = $.inArray("[Measures].[MeasuresLevel]", cd.colHeaders);
+	var formatStrings = myself.bTable.olapCube.getFormatStrings();
+	
+	var cellFormats = [];
+	if(measuresLevelColIdx < 0) {
+		$.each(cd.colHeaders, function(i, v) {
+			if(cd.colTypes[i] == "numeric") {
+				var measureQn = "";
+				$.each(v.substring(1, v.length - 1).split("]/["), function(j, w) {
+					if(w.indexOf("Measures].[") == 0) {
+						measureQn = "[" + w + "]";
+						cellFormats.push(formatStrings[measureQn]);
+						return;
+					}
+				});
+			} else {
+				cellFormats.push("");
+			}
+		});
+	}
+	
     this.ph.find("tbody tr").each(function(row,tr){
       /* 
        * Reject rows that are not actually part
@@ -331,7 +452,7 @@ var BTableComponent = UnmanagedComponent.extend({
       if (dataTable.fnGetPosition(tr) == null) {
         return true;
       }
-
+	  
       $(tr).children("td").each(function(col,td){
 
           var foundAddIn = handleAddIns(dataTable, td);
@@ -343,10 +464,12 @@ var BTableComponent = UnmanagedComponent.extend({
             var position = dataTable.fnGetPosition(td),
                 rowIdx = position[0],
                 colIdx = position[2],
-                format = cd.colFormats[colIdx],
-                value = myself.rawData.resultset[rowIdx][colIdx];
+                //format = cd.colFormats[colIdx],
+				format = cellFormats.length ? cellFormats[colIdx] : (cd.colTypes[colIdx] == "numeric" ? formatStrings[myself.bTable.olapCube.getQualifiedNameByCaption(myself.rawData.resultset[rowIdx][measuresLevelColIdx], "L")] : "");
+				value = myself.rawData.resultset[rowIdx][colIdx];
             if (format && (typeof value != "undefined" && value !== null)) {
-              $(td).text(sprintf(format,value));
+              //$(td).text(sprintf(format,value));
+			  $(td).text(getLocalizedFormattedValue(format,value));
             }
           }
       });
@@ -428,7 +551,14 @@ var BTableComponent = UnmanagedComponent.extend({
    * when the table *initialises* ,as opposed to every time the table is drawn,
    * so it provides us with a good place to add the postExec callback.
    */
-  fnInitComplete: function() {	
+  fnInitComplete: function() {
+	$("#" + this.htmlObject).prepend("<div id='" + this.bTable.properties.filtersPanelHtmlObject +
+        "' class='filtersPanel'" + (this.bTable.properties.showFilters ? "" : " style='display:none'") + "></div>");
+	this.bTable.printFilters();
+	
+	if(this.bTable.properties.fixedHeader)
+		$("#" + this.htmlObject + " .tableComponent").fixHeader();
+  
     this.postExec();
     this.unblock();
   },
@@ -487,10 +617,7 @@ var BTableComponent = UnmanagedComponent.extend({
 
     this.ph.trigger('cdfTableComponentProcessResponse');    
     
-    /*
-     * Gestire un resultset vuoto:
-     * creare comunque le intestazioni
-     */
+	
     var noResult = json.metadata.length == 0;
     
     if(!noResult)
@@ -502,7 +629,7 @@ var BTableComponent = UnmanagedComponent.extend({
     cd.colHeaders = noResult ? [] : json.metadata.map(function(i){return i.colName});
     cd.colTypes = noResult ? [] : json.metadata.map(function(i){return i.colType.toLowerCase()});
     cd.colFormats = noResult ? [] : json.metadata.map(function(i){return i.colType.toLowerCase() == "numeric" ? /*"%.2f"*/"%d" : "%s"});
-
+	
     var dtData0 = TableComponent.getDataTableOptions(cd);
     
     if(noResult)

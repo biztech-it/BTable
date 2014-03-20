@@ -15,4 +15,8 @@
     <!--  Content Generator  -->
     <!-- <bean id="cpk" class="pt.webdetails.cpk.CpkContentGenerator" scope="prototype"/> -->
 
+	<bean id="btable" class="it.biztech.btable.BTableContentGenerator" scope="prototype"/>
+	<bean id="file" class="it.biztech.btable.api.FileApi"/>
+	<bean id="olap" class="it.biztech.btable.api.OlapApi"/>
+	
 </beans>

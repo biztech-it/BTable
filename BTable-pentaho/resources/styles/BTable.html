@@ -20,7 +20,7 @@
 	    			<p>A Drill-Anywhere Component For CDE</p>
 	    		</div>
 	    		<div class="btableVersion">
-	    			<p>Ver. <span>&nbsp;</span></p>
+	    			<p>Ver. <a href="read?path=/system/BTable/CHANGELOG.txt" target="_blank">&nbsp;</a></p>
 	    		</div>
                 <div class="btableLicense">
                     <p>Lic. <a href="http://www.mozilla.org/MPL/2.0/" target="_blank">MPL 2.0</a></p>
@@ -88,7 +88,7 @@
                                     obj[el.colName] = data.resultset[0][idx];
                                 });
 
-                                $(".btableVersion p span").text(obj.version);
+                                $(".btableVersion p a").text(obj.branch == "TRUNK" && obj.version == "SNAPSHOT" ? "T-S" : obj.version);
                             }
                         },
                         queryDefinition:  {

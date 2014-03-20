@@ -178,6 +178,26 @@
       "type": "Boolean"
      },
      {
+      "name": "file",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "tableSettingsFromFile",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "hideSpans",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "fixedHeader",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
       "name": "listeners",
       "value": "[]",
       "type": "Listeners"
@@ -274,7 +294,7 @@
      },
      {
       "name": "preExecution",
-      "value": "function() {\n    var urlQuery = getURLQuery();\n        \n    var btdefObj = JSON.parse(urlQuery.btdef);\n\n    this.catalog = (btdefObj.catalog) ? btdefObj.catalog : \"\";\n    this.jndi = (btdefObj.jndi) ? btdefObj.jndi : \"\";\n    this.cube = (btdefObj.cube) ? btdefObj.cube : \"\";\n    this.dimensions = (btdefObj.dimensions) ? btdefObj.dimensions : [];\n    this.measures = (btdefObj.measures) ? btdefObj.measures : [];\n    this.pivotDimensions = (btdefObj.pivotDimensions) ? btdefObj.pivotDimensions : [];\n    this.filters = (btdefObj.filters) ? btdefObj.filters : [];\n    this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;\n    this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;\n    this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;\n    this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;\n    this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;\n\tthis.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;\n\tthis.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;\n\tthis.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : \"bottom\";\n\tthis.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;\n    \n    return true;\n}",
+      "value": "function() {\n    var urlQuery = getURLQuery();\n    var btfile = urlQuery.btfile;\n    \n    if(btfile) {\n        this.file = btfile;\n        this.tableSettingsFromFile = true;\n        this.drillTarget = \"SELF\";\n    } else {\n        var btdef = urlQuery.btdef;\n        \n        if(urlQuery.btdef) {\n            var btdefObj = JSON.parse(urlQuery.btdef);\n    \n            this.catalog = (btdefObj.catalog) ? btdefObj.catalog : \"\";\n            this.jndi = (btdefObj.jndi) ? btdefObj.jndi : \"\";\n            this.cube = (btdefObj.cube) ? btdefObj.cube : \"\";\n            this.dimensions = (btdefObj.dimensions) ? btdefObj.dimensions : [];\n            this.measures = (btdefObj.measures) ? btdefObj.measures : [];\n            this.pivotDimensions = (btdefObj.pivotDimensions) ? btdefObj.pivotDimensions : [];\n            this.filters = (btdefObj.filters) ? btdefObj.filters : [];\n            this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;\n            this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;\n            this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;\n            this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;\n            this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;\n            this.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;\n            this.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;\n        \tthis.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : \"bottom\";\n        \tthis.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;\n            this.drillTarget = (btdefObj.hasOwnProperty('drillTarget')) ? btdefObj.drillTarget : \"SELF\";\n        }\n    }\n    \n    this.renderDashboard = true;\n    \n    return true;\n}",
       "type": "JavaScript"
      },
      {

@@ -20,7 +20,7 @@
 	    			<p>A Drill-Anywhere Component For CDE</p>
 	    		</div>
 	    		<div class="btableVersion">
-	    			<p>Ver. <span>&nbsp;</span></p>
+	    			<p>Ver. <a href="file/read?path=/system/BTable/CHANGELOG.txt" target="_blank">&nbsp;</a></p>
 	    		</div>
                 <div class="btableLicense">
                     <p>Lic. <a href="http://www.mozilla.org/MPL/2.0/" target="_blank">MPL 2.0</a></p>
@@ -51,14 +51,14 @@
 					];
 
                 	var siteMapSelectedParameter = "";
-                	var contextFile = Dashboards.getParameterValue("Dashboards.context.file");
-                	if(contextFile == "About.wcdf")
+                	var contextFile = Dashboards.getParameterValue("Dashboards.context.path");
+                	if(contextFile == "/system/BTable/dashboards/About.wcdf")
                 		siteMapSelectedParameter = "About";
-                	else if(contextFile == "Datasources.wcdf")
+                	else if(contextFile == "/system/BTable/dashboards/Datasources.wcdf")
                 		siteMapSelectedParameter = "Data Sources";
-                	else if(contextFile == "Sample.wcdf")
+                	else if(contextFile == "/system/BTable/dashboards/Sample.wcdf")
                 		siteMapSelectedParameter = "Sample";
-                	else if(contextFile == "Analyzer.wcdf")
+                	else if(contextFile == "/system/BTable/dashboards/Analyzer.wcdf")
                 		siteMapSelectedParameter = "Analyzer";
 
                 	var render_cpkSiteMap = {
@@ -88,7 +88,7 @@
                                     obj[el.colName] = data.resultset[0][idx];
                                 });
 
-                                $(".btableVersion p span").text(obj.version);
+                                $(".btableVersion p a").text(obj.branch == "TRUNK" && obj.version == "SNAPSHOT" ? "T-S" : obj.version);
                             }
                         },
                         queryDefinition:  {

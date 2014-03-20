@@ -1,0 +1,48 @@
+CHANGELOG
+---------
+
+v2.0 [2014.03.19]
+
+	NEW FEATURES:
+		* Mondrian's elements shown using captions instead of names (with localized schema support)
+		* Mondrian's elements not shown if the user's Mondrian role can't access them
+		* numbers formatting derived from Mondrian's "formatString" attribute (with localization support)
+		* saving a BTable analysis to a file
+		* opening a saved BTable analysis
+		* using a saved BTable analysis to build a new BTable within a dashboard (with ability to override filters and table settings)
+		* opening a BTable in a new tab or window
+		* drill target option: drill in a new tab | drill in a new window | drill in the same page (only in Render dashboard)
+		* fixed table header option
+
+	BUG FIXES:
+		* issues with members containing the character '
+
+		
+v1.5 [2013.12.24]
+	Released also for Pentaho 5.0
+	
+	NEW FEATURES:
+		* component's UI internationalization support
+		* BTable Analyzer
+
+	Minor bug fixes.
+
+	
+v1.0 [2013.10.23]
+	Initial release (only Pentaho 4.x)
+	
+	FEATURES:
+		* addition | replacement | removal of dimensions
+		* addition | replacement | removal of measures
+		* cross tables (pivot dimensions)
+		* sorting rows/columns
+		* filters management (with ability to unlink from the dashboard's context to stop listening to external parameters)
+		* swap axes
+		* show/hide null values (not empty)
+		* grand total and subtotals on rows/columns (no subtotals within a hierarchy)
+		* drill-cell
+		* drill-row/column
+		* show/hide spans
+		* show mdx
+		* export table to Excel (data and formatting)
+		* reset table to the initial query

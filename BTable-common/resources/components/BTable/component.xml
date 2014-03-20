@@ -12,7 +12,9 @@
 		<Model>
 			<Property>htmlObject</Property>
 			<Property>listeners</Property>
-			
+
+			<Property>file</Property>
+			<Property>tableSettingsFromFile</Property>
 			<Property>catalog</Property>
 			<Property>jndi</Property>
 			<Property>cube</Property>
@@ -29,22 +31,13 @@
 			<Property>pivotGrandTotal</Property>
 			<Property>pivotSubTotals</Property>
 			<!-- Property>totalsPosition</Property -->
+			<Property>hideSpans</Property>
 			<Property>showFilters</Property>
+			<Property>fixedHeader</Property>
 
 			<Definition name="chartDefinition">
 				<Property name="clickAction">cccClickAction</Property>
-				<Property name="colSearchable">colSearchable</Property>
-				<Property name="paginate">paginate</Property>
-				<Property>paginateServerside</Property>
-				<Property name="paginationType">paginationType</Property>
-				<Property name="filter">filter</Property>
-				<Property name="info">info</Property>
-				<Property name="displayLength">displayLength</Property>
-				<Property name="lengthChange">lengthChange</Property>
-				<Property name="tableStyle">tableStyle</Property>
 				<Property>drawCallback</Property>
-				<Property name="sDom">sDom</Property>
-				<Property name="oLanguage">oLanguage</Property>
 			</Definition>
 			<Property>executeAtStart</Property>
 			<Property>preChange</Property>
@@ -65,6 +58,9 @@
                 <Style version="1.0" src="lib/btable.css">btable.css</Style>
                 <Style version="1.0" src="lib/jQuery-contextMenu/jquery.contextMenu.css">jquery.contextMenu</Style>
                 <Style version="1.5" src="lib/hynds/jquery.multiselect.filter.css">jquery.multiselect.filter.css</Style>
+				<Style version="1.01" src="lib/jqueryFileTree/jqueryFileTree.css">jqueryFileTree.css</Style>
+				<Style version="2.7" src="lib/jQuery-Impromptu/jquery.impromptu.css">jquery.impromptu.css</Style>
+				<Style version="1.0" src="lib/popup.css">popup.css</Style>
             </Styles>
             <Dependencies>
                 <Dependency src="lib/bt.table.js" version="1.0">bt.table.js</Dependency>
@@ -75,9 +71,38 @@
                 <Dependency src="lib/jQuery-contextMenu/jquery.contextMenu.js" version="1.0">jquery.contextMenu.js</Dependency>
                 <Dependency src="lib/jQuery-contextMenu/jquery.ui.position.js" version="1.10">jquery.ui.position</Dependency>                
                 <Dependency src="lib/hynds/jquery.multiselect.filter.js" version="1.5">jquery.multiselect.filter.js</Dependency>
-            </Dependencies>
+				<Dependency src="lib/form/jquery.form.js" version="3.40">jquery.form.js</Dependency>
+				<Dependency src="lib/jqueryFileTree/jqueryFileTree.js" version="1.01">jqueryFileTree.js</Dependency>
+				<Dependency src="lib/jQuery-Impromptu/jquery.impromptu.js" version="2.7">jquery.impromptu.js</Dependency>
+			</Dependencies>
             <CustomProperties>
                 <DesignerProperty>
+                    <Header>
+                        <Name>file</Name>
+                        <Parent>BaseProperty</Parent>
+                        <DefaultValue></DefaultValue>
+                        <Description>File Path</Description>
+                        <Tooltip></Tooltip>
+                        <InputType>String</InputType>
+                        <OutputType>String</OutputType>
+                        <Order>10</Order>
+                        <Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>tableSettingsFromFile</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"true"</DefaultValue>
+						<Description>Table Settings From File</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>				
+				<DesignerProperty>
                     <Header>
                         <Name>catalog</Name>
                         <Parent>BaseProperty</Parent>
@@ -160,7 +185,7 @@
 						<Name>filters</Name>
 						<Parent>BaseProperty</Parent>
 						<DefaultValue>"[]"</DefaultValue>
-						<Description>Filters</Description>
+						<Description>Filters / File Replacements</Description>
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
@@ -190,7 +215,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -204,7 +228,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -218,7 +241,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -232,7 +254,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -246,7 +267,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -260,7 +280,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -274,7 +293,6 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
@@ -294,6 +312,19 @@
                 </DesignerProperty>
                 <DesignerProperty>
                     <Header>
+						<Name>hideSpans</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"false"</DefaultValue>
+						<Description>Hide Spans</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>				
+                <DesignerProperty>
+                    <Header>
 						<Name>showFilters</Name>
 						<Parent>BaseProperty</Parent>
 						<DefaultValue>"true"</DefaultValue>
@@ -301,11 +332,36 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<!--Advanced>true</Advanced-->
 						<Order>10</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>fixedHeader</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"true"</DefaultValue>
+						<Description>Fixed Header</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>drillInPUC</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"true"</DefaultValue>
+						<Description>Drill in PUC</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>				
             </CustomProperties>
         </Implementation>		
 	</Contents>

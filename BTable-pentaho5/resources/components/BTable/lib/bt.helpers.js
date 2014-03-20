@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Biz Tech (http://www.biztech.it). All rights reserved.
+ * Copyright 2013-2014 Biz Tech (http://www.biztech.it). All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
  * If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -37,6 +37,24 @@ bt.helpers = bt.helpers || {};
 
 		getRenderServiceUrl: function() {
 			return Dashboards.getWebAppPath() + "/plugin/BTable/api/render";
+		},
+		
+		getExploreRepositoryServiceUrl: function() {
+			return Dashboards.getWebAppPath() + "/plugin/pentaho-cdf-dd/api/resources/explore?fileExtensions=.btable&access=create";
+		},		
+		
+		getSaveFileServiceUrl: function() {
+			return Dashboards.getWebAppPath() + "/plugin/BTable/api/file/save";
+		},
+		
+		getReadFileServiceUrl: function(path) {
+			return Dashboards.getWebAppPath() + "/plugin/BTable/api/file/read?path=" + path;
+		}
+	};
+
+	obj.util = {
+		getServiceResultEvaluation: function(result) {
+			return result;
 		}
 	};
 	
@@ -52,7 +70,7 @@ bt.helpers = bt.helpers || {};
 
 	obj.olap = {
 		getServiceUrl: function() {
-			return Dashboards.getWebAppPath() + "/plugin/pentaho-cdf-dd/api/olap/";
+			return Dashboards.getWebAppPath() + "/plugin/BTable/api/olap/";
 		},
 
 		getCubesUrl: function() {

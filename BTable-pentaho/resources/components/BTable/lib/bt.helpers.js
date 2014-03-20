@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Biz Tech (http://www.biztech.it). All rights reserved.
+ * Copyright 2013-2014 Biz Tech (http://www.biztech.it). All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
  * If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -37,6 +37,24 @@ bt.helpers = bt.helpers || {};
 
 		getRenderServiceUrl: function() {
 			return Dashboards.getWebAppPath() + "/content/BTable/render";
+		},
+		
+		getExploreRepositoryServiceUrl: function() {
+			return Dashboards.getWebAppPath() + "/content/pentaho-cdf-dd/ExploreFolder?fileExtensions=.btable&access=create";
+		},		
+		
+		getSaveFileServiceUrl: function() {
+			return Dashboards.getWebAppPath() + "/content/BTable/save";
+		},
+		
+		getReadFileServiceUrl: function(path) {
+			return Dashboards.getWebAppPath() + "/content/BTable/read?path=" + path;
+		}		
+	};
+	
+	obj.util = {
+		getServiceResultEvaluation: function(result) {
+			return eval("(" + result + ")");
 		}
 	};
 	
@@ -52,7 +70,7 @@ bt.helpers = bt.helpers || {};
 
 	obj.olap = {
 		getServiceUrl: function() {
-			return Dashboards.getWebAppPath() + "/content/pentaho-cdf-dd/OlapUtils";
+			return Dashboards.getWebAppPath() + "/content/BTable/olapUtils";
 		},
 
 		getCubesUrl: function() {
@@ -64,14 +82,7 @@ bt.helpers = bt.helpers || {};
 		},
 		
 		getNormalizedCatalog: function(catalog) {
-			var normalizedCatalog = catalog;
-			if(normalizedCatalog.charAt(0) == '/'){
-				normalizedCatalog = 'solution:' + normalizedCatalog.substring(1);
-			}
-			else {
-				normalizedCatalog = 'solution:' + normalizedCatalog;
-			}
-			return normalizedCatalog;
+			return "solution:" + catalog;
 		}
 	};
 

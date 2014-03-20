@@ -28,5 +28,33 @@
 		<dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.2.2" conf='default->default' />
 		<dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.2.2" conf='default->default' />
 		<dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.2.2" conf='default->default'/>
+		
+		<dependency org="net.sf.ezmorph" name="ezmorph" rev="1.0.6" conf='default->default' transitive="false" />
+		<dependency org="commons-fileupload" name="commons-fileupload" rev="1.2.1" transitive="false" />
+		<dependency org="commons-io" name="commons-io" rev="1.4" transitive="false" />
+		<dependency org="commons-lang" name="commons-lang" rev="2.4" />
+		<dependency org="commons-logging" name="commons-logging" rev="1.1.1" transitive="false" />
+		<dependency org="dom4j" name="dom4j" rev="1.6.1"/>
+		
+		<dependency org="pentaho" name="pentaho-bi-platform-api" 
+          rev="${dependency.bi-platform.revision}" changing="true" transitive="false" />
+		<dependency org="pentaho" name="pentaho-bi-platform-util" 
+		  rev="${dependency.bi-platform.revision}" changing="true" transitive="false" />
+		<dependency org="pentaho" name="pentaho-bi-platform-engine-core" 
+		  rev="${dependency.bi-platform.revision}" transitive="false" changing="true"/>
+		<dependency org="pentaho" name="pentaho-bi-platform-engine-services" 
+		  rev="${dependency.bi-platform.revision}" transitive="false" changing="true"/>
+		<dependency org="pentaho" name="pentaho-bi-platform-plugin-services"
+          rev="${dependency.bi-platform.revision}" changing="true" transitive="false" />
+		<dependency org="pentaho" name="pentaho-bi-platform-plugin-actions"
+		  rev="${dependency.bi-platform.revision}" changing="true" transitive="false" />
+		  		  
+		<dependency org="pentaho" name="mondrian"
+          rev="${dependency.mondrian.revision}" transitive="false" changing="true" />
+		<dependency org="eigenbase" name="eigenbase-xom" rev="1.3.1" transitive="false" />  
+	    <dependency org="org.json" name="json" rev="3.1.1"/>
+		
+		<dependency org="javax.servlet.jsp" name="jsp-api" rev="2.0" />
+		<dependency org="javax.servlet" name="servlet-api" rev="2.5" />
   </dependencies>
 </ivy-module>

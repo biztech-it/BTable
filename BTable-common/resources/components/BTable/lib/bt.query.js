@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Biz Tech (http://www.biztech.it). All rights reserved.
+ * Copyright 2013-2014 Biz Tech (http://www.biztech.it). All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
  * If a copy of the MPL was not distributed with this file, You can obtain one at
@@ -150,6 +150,14 @@ bt.Query = function(properties, olapCube) {
     			members = level.members;
     		}
 
+			if($.isArray(members)) {
+				members = $.map(members, function(e) {
+					return e.replace(/[']/g, "''");
+				});
+			} else {
+				members = members.replace(/[']/g, "''");
+			}
+			
 			var separator = between ? " :" : ",";
 
 			if(uniqueNames) {
@@ -571,7 +579,7 @@ bt.Query = function(properties, olapCube) {
 				previousLevelAllMembers.push(mdxFilteredSet == "" ? true : false);
 			});
 
-			if(!(previousLevelAllMembers.length == 1 && previousLevelAllMembers[0])) { // NEW
+			if(!(previousLevelAllMembers.length == 1 && previousLevelAllMembers[0])) {
 				var levelSets = $.map(hierarchy.levels, function(level) {
 					return "[" + level.hierarchy + "_" + level.name + "_Set]";
 				});
@@ -670,7 +678,7 @@ bt.Query = function(properties, olapCube) {
 			    			members = level.members;
 			    		}
 						
-						if(members.length > 0) { // NEW
+						if(members.length > 0) {
 							var plainFilter = filterMode + ":[" + ( $.isArray(members) ? members.join("],[") : members ) + "]";
 							var filter = [qn, plainFilter];
 	
@@ -932,7 +940,7 @@ bt.Query = function(properties, olapCube) {
     	hierarchies: []
     };
 
-    if(olapCube) {
+    if(olapCube && olapCube.getStructure()) {
     	var hierarchies = olapCube.getHierarchies();
     	$.each(hierarchies, function(i, v) {
     		var levels = [];
@@ -966,38 +974,40 @@ bt.Query = function(properties, olapCube) {
     }
 
     var initializeFiltersMap = function(axis) {
-        $.each(axis, function(i, v) {
-        	var lvlQn = v[0];
-        	var fltExpr = v[1];
-        	if(fltExpr != "") {
-        		if(lvlQn.indexOf("].[") < 0) {
-	            	var hrcQn = lvlQn;
-	            	var synchronizedByParameters = fltExpr.indexOf("[") < 0;
-	            	var filterMode = synchronizedByParameters ? fltExpr.split(":")[0] : fltExpr.split(":[")[0];
-	            	var membersString = synchronizedByParameters ? "" : fltExpr.replace(filterMode + ":", "");
-	            	var calculatedMembers = filtersMap.hierarchies[hrcQn].calculatedMembers;
-	            	calculatedMembers.initialFilterExpression = fltExpr;
-	            	calculatedMembers.synchronizedByParameters = synchronizedByParameters;
-	            	calculatedMembers.filterMode = filterMode;
-	            	calculatedMembers.members = synchronizedByParameters ? [] : membersString.substring(1, membersString.length - 1).split("],[");
-	            	calculatedMembers.filtered = true;
-        		} else {
-	            	var hrcQn = lvlQn.split("].[")[0] + "]";
-	            	var levels = filtersMap.hierarchies[hrcQn].levels;
-	            	var synchronizedByParameters = fltExpr.indexOf("[") < 0;
-	            	var filterMode = synchronizedByParameters ? fltExpr.split(":")[0] : fltExpr.split(":[")[0];
-	            	var membersString = synchronizedByParameters ? "" : fltExpr.replace(filterMode + ":", "");
-	            	var level = filtersMap.hierarchies[hrcQn].levels[lvlQn];
-	            	level.initialFilterExpression = fltExpr;
-	            	level.synchronizedByParameters = synchronizedByParameters;
-	            	level.filterMode = filterMode.replace("_un", "");
-	            	level.uniqueNames = filterMode.indexOf("_un") > -1;
-	            	level.members = synchronizedByParameters ? [] : membersString.substring(1, membersString.length - 1).split("],[");
-	            	level.filtered = true;
-        		}
-        	}
-        });
-    }
+		if(olapCube && olapCube.getStructure()) {
+			$.each(axis, function(i, v) {
+				var lvlQn = v[0];
+				var fltExpr = v[1];
+				if(fltExpr != "") {
+					if(lvlQn.indexOf("].[") < 0) {
+						var hrcQn = lvlQn;
+						var synchronizedByParameters = fltExpr.indexOf("[") < 0;
+						var filterMode = synchronizedByParameters ? fltExpr.split(":")[0] : fltExpr.split(":[")[0];
+						var membersString = synchronizedByParameters ? "" : fltExpr.replace(filterMode + ":", "");
+						var calculatedMembers = filtersMap.hierarchies[hrcQn].calculatedMembers;
+						calculatedMembers.initialFilterExpression = fltExpr;
+						calculatedMembers.synchronizedByParameters = synchronizedByParameters;
+						calculatedMembers.filterMode = filterMode;
+						calculatedMembers.members = synchronizedByParameters ? [] : membersString.substring(1, membersString.length - 1).split("],[");
+						calculatedMembers.filtered = true;
+					} else {
+						var hrcQn = lvlQn.split("].[")[0] + "]";
+						var levels = filtersMap.hierarchies[hrcQn].levels;
+						var synchronizedByParameters = fltExpr.indexOf("[") < 0;
+						var filterMode = synchronizedByParameters ? fltExpr.split(":")[0] : fltExpr.split(":[")[0];
+						var membersString = synchronizedByParameters ? "" : fltExpr.replace(filterMode + ":", "");
+						var level = filtersMap.hierarchies[hrcQn].levels[lvlQn];
+						level.initialFilterExpression = fltExpr;
+						level.synchronizedByParameters = synchronizedByParameters;
+						level.filterMode = filterMode.replace("_un", "");
+						level.uniqueNames = filterMode.indexOf("_un") > -1;
+						level.members = synchronizedByParameters ? [] : membersString.substring(1, membersString.length - 1).split("],[");
+						level.filtered = true;
+					}
+				}
+			});
+		}
+	}
 
     initializeFiltersMap(definition.dimensions);
     initializeFiltersMap(definition.pivotDimensions);
