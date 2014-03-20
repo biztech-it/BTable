@@ -30,11 +30,10 @@ BTable-pentaho/resources/lang/
 
 BTable-pentaho/solution/BTable From File*
 
-BTable-pentaho/src/
-!BTable-pentaho/src/it/biztech/btable/olap/
-!BTable-pentaho/src/it/biztech/btable/BTableConstants.java
-!BTable-pentaho/src/it/biztech/btable/BTableContentGenerator.java
-!BTable-pentaho/src/it/biztech/btable/BTableContentTypeMetaProvider.java
+BTable-pentaho4/src/it/biztech/btable/util/Utils.java
+BTable-pentaho4/src/it/biztech/btable/AccessFileException.java
+BTable-pentaho4/src/it/biztech/btable/BTableDefinition.java
+BTable-pentaho4/src/it/biztech/btable/WritingFileException.java
 
 BTable-pentaho/static/custom/css/
 BTable-pentaho/static/custom/img/
@@ -63,11 +62,10 @@ BTable-pentaho5/resources/lang/
 
 BTable-pentaho5/solution/BTable From File*
 
-BTable-pentaho5/src/
-!BTable-pentaho5/src/it/biztech/btable/api/
-!BTable-pentaho/src/it/biztech/btable/olap/
-!BTable-pentaho5/src/it/biztech/btable/BTableConstants.java
-!BTable-pentaho5/src/it/biztech/btable/BTableContentGenerator.java
+BTable-pentaho5/src/it/biztech/btable/util/Utils.java
+BTable-pentaho5/src/it/biztech/btable/AccessFileException.java
+BTable-pentaho5/src/it/biztech/btable/BTableDefinition.java
+BTable-pentaho5/src/it/biztech/btable/WritingFileException.java
 
 BTable-pentaho5/static/custom/css/
 BTable-pentaho5/static/custom/img/
