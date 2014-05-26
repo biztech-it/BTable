@@ -174,7 +174,7 @@ var BTableComponent = UnmanagedComponent.extend({
 		if(!fileError) this.error("BTableComponent requires Catalog, Jndi and Cube");
     }
 	
-	this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
+	//this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
 	
     this.bTable = new bt.components.BTable({
       componentName: this.name,
@@ -228,6 +228,8 @@ var BTableComponent = UnmanagedComponent.extend({
       this.init();
       this.isInitialized = true;
     }
+    
+    this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
 	
     try{
       this.block();
