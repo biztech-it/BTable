@@ -304,9 +304,12 @@ var BTableComponent = UnmanagedComponent.extend({
 	
     var myself = this;
     
+	var mouseButton = isMobile.any() ? "left" : "right";
+	
     $("#"+this.htmlObject).contextMenu({
       selector: 'thead th',
       className: 'menu-with-title',
+	  trigger: mouseButton,
       build: function($trigger, e) {
         // this callback is executed every time the menu is to be shown
         // its results are destroyed every time the menu is hidden
@@ -317,12 +320,14 @@ var BTableComponent = UnmanagedComponent.extend({
     }).contextMenu({
         selector: 'tbody td.dataTables_empty',
         className: 'menu-with-title',
+		trigger: mouseButton,
         build: function($trigger, e) {
           return myself.bTable.buildNoDataContextMenu();
         }
     }).contextMenu({
         selector: 'tbody td',
         className: 'menu-with-title',
+		trigger: mouseButton,
         build: function($trigger, e) {
           var state = {},
           target = $(e.target),
