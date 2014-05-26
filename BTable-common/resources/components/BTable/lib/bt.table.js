@@ -2084,7 +2084,7 @@ bt.components.BTable = function(spec) {
             measuresOnColumns: {
                 name: $.i18n.prop("menu_item_table_settings_measures_on_columns"), 
                 type: 'radio', 
-                radio: 'radio', 
+                radio: 'swap_axis', 
                 value: 'true',
                 selected: settings.measuresOnColumns,
                 events: {
@@ -2096,7 +2096,7 @@ bt.components.BTable = function(spec) {
             measuresOnRows: {
                 name: $.i18n.prop("menu_item_table_settings_measures_on_rows"), 
                 type: 'radio', 
-                radio: 'radio', 
+                radio: 'swap_axis', 
                 value: 'false', 
                 selected: !settings.measuresOnColumns,
                 events: {
@@ -2140,7 +2140,7 @@ bt.components.BTable = function(spec) {
 			menu.items.drillHere = {
 				name: $.i18n.prop("menu_item_table_settings_drill_here"), 
 				type: 'radio', 
-				radio: 'radio', 
+				radio: 'drill_target', 
 				value: 'SELF',
 				selected: myself.properties.drillTarget == "SELF",
 				events: {
@@ -2154,7 +2154,7 @@ bt.components.BTable = function(spec) {
 			menu.items.drillInNewTab = {
 				name: $.i18n.prop("menu_item_table_settings_drill_in_new_tab"), 
 				type: 'radio', 
-				radio: 'radio', 
+				radio: 'drill_target', 
 				value: 'NEW_TAB',
 				selected: myself.properties.drillTarget == "NEW_TAB",
 				events: {
@@ -2167,7 +2167,7 @@ bt.components.BTable = function(spec) {
 		menu.items.drillInNewWindow = {
 			name: $.i18n.prop("menu_item_table_settings_drill_in_new_window"), 
 			type: 'radio', 
-			radio: 'radio', 
+			radio: 'drill_target', 
 			value: 'NEW_WINDOW', 
 			selected: myself.properties.drillTarget == "NEW_WINDOW",
 			events: {
