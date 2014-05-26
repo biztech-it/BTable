@@ -59,6 +59,62 @@ bt.Query = function(properties, olapCube) {
         orders: settings.orders
     }
 
+	// If a hierarchy is found in both filters and dimensions, it moves the filtered levels of that hierarchy from filters to dimensions
+	var normalizeDefinition = function() {
+		var hierarchiesInDimensions = $.map(definition.dimensions, function(e, i) { return (e[0].split("].[")[0] + "]").replace("]]", "]"); });
+		var hierarchiesInPivotDimensions = $.map(definition.pivotDimensions, function(e, i) { return (e[0].split("].[")[0] + "]").replace("]]", "]"); });
+		var newFilters = [];
+		
+		$.each(definition.filters, function(i, f) {
+			var filterLevel = f[0];
+			var filterHierarchy = (filterLevel.split("].[")[0] + "]").replace("]]", "]");
+			
+			if($.inArray(filterHierarchy, hierarchiesInDimensions) > -1) {
+				var filterLevelDepth = olapCube.getLevelDepth(filterLevel);
+				var index = -1;
+				var side = "";
+				$.each(definition.dimensions, function(i, d) {
+					var dimensionLevel = d[0];
+					if((filterLevel.split("].[")[0] + "]").replace("]]", "]") == (dimensionLevel.split("].[")[0] + "]").replace("]]", "]")) {
+						index = i;
+						dimensionLevelDepth = olapCube.getLevelDepth(dimensionLevel);
+						if(dimensionLevelDepth < filterLevelDepth)
+							side = "right";
+						else
+							side = "left";
+					}
+				});
+				index += side == "right" ? 1 : 0;
+				definition.dimensions.splice(index, 0, f);
+			}
+			else if($.inArray(filterHierarchy, hierarchiesInPivotDimensions) > -1) {
+				var filterLevelDepth = olapCube.getLevelDepth(filterLevel);
+				var index = -1;
+				var side = "";
+				$.each(definition.pivotDimensions, function(i, d) {
+					var dimensionLevel = d[0];
+					if(dimensionLevel != "MEASURES") {
+						if((filterLevel.split("].[")[0] + "]").replace("]]", "]") == (dimensionLevel.split("].[")[0] + "]").replace("]]", "]")) {
+							index = i;
+							dimensionLevelDepth = olapCube.getLevelDepth(dimensionLevel);
+							if(dimensionLevelDepth < filterLevelDepth)
+								side = "right";
+							else
+								side = "left";
+						}
+					}
+				});
+				index += side == "right" ? 1 : 0;
+				definition.pivotDimensions.splice(index, 0, f);				
+			}
+			else {
+				newFilters.push(f);
+			}
+		});
+		
+		definition.filters = newFilters;
+	}();
+	
     myself.saveInHistory = function() {
     	var def = $.extend(true, {}, definition);
     	history.push(def);
