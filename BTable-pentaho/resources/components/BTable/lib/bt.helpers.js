@@ -74,7 +74,7 @@ bt.helpers = bt.helpers || {};
 		},
 
 		getCubesUrl: function() {
-			return "?operation=GetCubes";
+			return "?operation=GetOlapCubes";
 		},
 
 		getCubeStructureUrl: function() {
