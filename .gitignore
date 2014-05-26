@@ -25,7 +25,6 @@ BTable-pentaho/endpoints/kettle/listCdaDatasources.ktr
 
 BTable-pentaho/resources/components/
 !BTable-pentaho/resources/components/BTable/lib/bt.helpers.js
-!BTable-pentaho/resources/components/BTable/lib/popup.css
 BTable-pentaho/resources/lang/
 
 BTable-pentaho/solution/BTable From File*
@@ -57,7 +56,6 @@ BTable-pentaho5/endpoints/kettle/listCdaDatasources.ktr
 		  
 BTable-pentaho5/resources/components/
 !BTable-pentaho5/resources/components/BTable/lib/bt.helpers.js
-!BTable-pentaho5/resources/components/BTable/lib/popup.css
 BTable-pentaho5/resources/lang/
 
 BTable-pentaho5/solution/BTable From File*
