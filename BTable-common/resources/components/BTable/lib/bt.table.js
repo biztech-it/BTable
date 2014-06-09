@@ -3201,20 +3201,20 @@ bt.components.BTable = function(spec) {
 		var defaultStyle = {
 			rules: [
 			   {selector: "table", properties: [{name: "border-collapse", value: "collapse"}]},
-			   {selector: "th", properties: [{name: "border", value: "1px solid #000"}, {name: "background-color", value: "#C3D9FF"}]},
+			   {selector: "th", properties: [{name: "border", value: "1px solid #000"}, {name: "background-color", value: "#C3D9FF"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
 			   {selector: "td", properties: [{name: "border", value: "1px solid #000"}]},
 			   {selector: "tbody tr.odd td", properties: [{name: "background-color", value: "#E2E4FF"}]},
 			   {selector: "tbody tr.even td", properties: [{name: "background-color", value: "#FFFFFF"}]},
-			   {selector: "td.string", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "12px"}]},
-			   {selector: "td.numeric", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "12px"}, {name: "padding-right", value: "4px"}]},
+			   {selector: "td.string", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+			   {selector: "td.numeric", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
 			   {selector: "td.subtotal", properties: [{name: "font-weight", value: "bold"}]},
 			   {selector: "tr.odd td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
 			   {selector: "tr.even td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
-			   {selector: ".filtersTitle", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "black"}]},
-			   {selector: ".hierarchy", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "blue"}]},
-			   {selector: ".separator", properties: [{name: "font-weight", value: "normal"}, {name: "color", value: "blue"}]},
-			   {selector: ".level", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "red"}]},
-			   {selector: ".filter", properties: [{name: "font-weight", value: "normal"}]}
+			   {selector: ".filtersTitle", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "black"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+			   {selector: ".hierarchy", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+			   {selector: ".separator", properties: [{name: "font-weight", value: "normal"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+			   {selector: ".level", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "red"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+			   {selector: ".filter", properties: [{name: "font-weight", value: "normal"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]}
 			]
 		};
 		

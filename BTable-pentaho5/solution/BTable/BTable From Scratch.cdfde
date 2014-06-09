@@ -20,7 +20,7 @@
      },
      {
       "name": "resourceCode",
-      "value": ".container {margin-top: 20px; margin-bottom: 20px;}\n\n/******************** FILTERS PANEL ********************/\n.filtersPanel {margin-bottom: 10px;}\n.filtersPanel .filtersTitle {font-weight: bold; color: black;}\n.filtersPanel .hierarchy {font-weight: bold;color: #437C0D;}\n.filtersPanel .separator {font-weight: normal;color: #437C0D;}\n.filtersPanel .level {font-weight: bold; color: #D1380E;}\n.filtersPanel .filter {font-weight: normal;}\n\n/************************* TABLE ***********************/\n.bTableComponent .dataTables_wrapper {min-height:0;}\n.bTableComponent table {border-collapse: collapse;}\n.bTableComponent th {border: 1px solid #000; background-color: #A2E069;}\n.bTableComponent td {border: 1px solid #000;}\n.bTableComponent tbody tr.odd td {background-color: #FFFFFF;}\n.bTableComponent tbody tr.even td {background-color: #E8E8E8;}\n.bTableComponent .string {font-family: Arial, serif; font-size: 12px;}\n.bTableComponent .numeric {font-family: Arial, serif; font-size: 12px; padding-right: 4px;}\n.bTableComponent .subtotal {font-weight: bold;}\n.bTableComponent tr.even td.grandtotal, \n.bTableComponent tr.odd td.grandtotal {font-weight: bold; background-color: #A2E069;} ",
+      "value": ".container {margin-top: 20px; margin-bottom: 20px;}\n\n/******************** FILTERS PANEL ********************/\n.filtersPanel {margin-bottom: 10px;}\n.filtersPanel .filtersTitle {font-weight: bold; color: black;}\n.filtersPanel .hierarchy {font-weight: bold;color: #437C0D;}\n.filtersPanel .separator {font-weight: normal;color: #437C0D;}\n.filtersPanel .level {font-weight: bold; color: #D1380E;}\n.filtersPanel .filter {font-weight: normal;}\n\n/************************* TABLE ***********************/\n.bTableComponent .dataTables_wrapper {min-height:0;}\n.bTableComponent table {border-collapse: collapse;}\n.bTableComponent th {border: 1px solid #000; background-color: #A2E069; font-family: Arial, serif; font-size: 12px;}\n.bTableComponent td {border: 1px solid #000; padding: 4px 4px 4px 4px;}\n.bTableComponent tbody tr.odd td {background-color: #FFFFFF;}\n.bTableComponent tbody tr.even td {background-color: #E8E8E8;}\n.bTableComponent td.string {font-family: Arial, serif; font-size: 12px;}\n.bTableComponent td.numeric {font-family: Arial, serif; font-size: 12px; white-space: nowrap;}\n.bTableComponent td.subtotal {font-weight: bold;}\n.bTableComponent tr.even td.grandtotal, \n.bTableComponent tr.odd td.grandtotal {font-weight: bold; background-color: #A2E069;}\n.bTableComponent table.dataTable.no-footer {border-bottom: none;}\n.bTableComponent table.dataTable {box-sizing: border-box;}\n.bTableComponent table.dataTable thead th {border: 1px solid #000; background-color: #A2E069; padding: 4px 4px 4px 4px; font-family: Arial, serif; font-size: 12px;}\n.bTableComponent table.dataTable tbody td {border: 1px solid #000; padding: 4px 4px 4px 4px;} ",
       "type": "Resource"
      }
     ]
@@ -68,6 +68,48 @@
  "components": {
   "rows": [
    {
+    "id": "GENERIC",
+    "name": "Generic",
+    "type": "Label",
+    "typeDesc": "<i>Group</i>",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "value": "Generic",
+      "type": "Label"
+     }
+    ]
+   },
+   {
+    "id": "7881796f-8eee-4b3f-fc73-7eecc2adf134",
+    "type": "ComponentsParameter",
+    "typeDesc": "Simple parameter",
+    "parent": "GENERIC",
+    "properties": [
+     {
+      "name": "name",
+      "value": "market",
+      "type": "Id"
+     },
+     {
+      "name": "propertyValue",
+      "value": "EMEA",
+      "type": "String"
+     },
+     {
+      "name": "parameterViewRole",
+      "value": "unused",
+      "type": "parameterViewRoleCustom"
+     },
+     {
+      "name": "bookmarkable",
+      "value": "false",
+      "type": "Boolean"
+     }
+    ]
+   },
+   {
     "id": "COMMUNITYCOMPONENTS",
     "name": "Community Contributions",
     "type": "Label",
@@ -82,7 +124,7 @@
     ]
    },
    {
-    "id": "aeb682bb-c0ab-9259-3738-161075be268f",
+    "id": "bdfaefef-e908-ff48-5694-66b92e4b2ae1",
     "type": "ComponentsBTableComponent",
     "typeDesc": "BTable (by Biz Tech)",
     "parent": "COMMUNITYCOMPONENTS",
@@ -193,6 +235,11 @@
       "type": "Boolean"
      },
      {
+      "name": "fixedHeader",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
       "name": "listeners",
       "value": "[]",
       "type": "Listeners"
@@ -208,18 +255,23 @@
       "type": "ValuesArray"
      },
      {
-      "name": "paginate",
+      "name": "expandOnClick",
       "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "paginate",
+      "value": "true",
       "type": "Boolean"
      },
      {
       "name": "filter",
-      "value": "false",
+      "value": "true",
       "type": "Boolean"
      },
      {
       "name": "info",
-      "value": "false",
+      "value": "true",
       "type": "Boolean"
      },
      {
@@ -233,19 +285,14 @@
       "type": "Boolean"
      },
      {
-      "name": "expandOnClick",
-      "value": "false",
-      "type": "Boolean"
+      "name": "drawCallback",
+      "value": "",
+      "type": "JavaScript"
      },
      {
       "name": "colSearchable",
       "value": "[]",
       "type": "Array"
-     },
-     {
-      "name": "drawCallback",
-      "value": "",
-      "type": "JavaScript"
      },
      {
       "name": "sDom",
@@ -269,7 +316,7 @@
      },
      {
       "name": "tableStyle",
-      "value": "classic",
+      "value": "themeroller",
       "type": "TableStyle"
      },
      {
@@ -278,18 +325,18 @@
       "type": "HtmlObject"
      },
      {
-      "name": "paginateServerside",
-      "value": "false",
-      "type": "Boolean"
-     },
-     {
       "name": "executeAtStart",
       "value": "true",
       "type": "Boolean"
      },
      {
+      "name": "paginateServerside",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
       "name": "preExecution",
-      "value": "function f() {\n    this.exportStyle = { //table style for Excel\n        rules: [\n            {selector: \"table\", properties: [{name: \"border-collapse\", value: \"collapse\"}]},\n            {selector: \"th\", properties: [{name: \"border\", value: \"1px solid #000\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"td\", properties: [{name: \"border\", value: \"1px solid #000\"}]},\n            {selector: \"tbody tr.odd td\", properties: [{name: \"background-color\", value: \"#FFFFFF\"}]},\n            {selector: \"tbody tr.even td\", properties: [{name: \"background-color\", value: \"#E8E8E8\"}]},\n            {selector: \"td.string\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"12px\"}]},\n            {selector: \"td.numeric\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"12px\"}, {name: \"padding-right\", value: \"4px\"}]},\n            {selector: \"td.subtotal\", properties: [{name: \"font-weight\", value: \"bold\"}]},\n            {selector: \"tr.odd td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"tr.even td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \".filtersTitle\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"black\"}]},\n            {selector: \".hierarchy\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#437C0D\"}]},\n            {selector: \".separator\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"color\", value: \"#437C0D\"}]},\n            {selector: \".level\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#D1380E\"}]},\n            {selector: \".filter\", properties: [{name: \"font-weight\", value: \"normal\"}]}\n\t\t]\n\t};\n}\n",
+      "value": "function f() {\n    this.exportStyle = { //table style for Excel\n        rules: [\n            {selector: \"th\", properties: [{name: \"border\", value: \"1px solid #000\"}, {name: \"background-color\", value: \"#A2E069\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td\", properties: [{name: \"border\", value: \"1px solid #000\"}]},\n            {selector: \"tbody tr.odd td\", properties: [{name: \"background-color\", value: \"#FFFFFF\"}]},\n            {selector: \"tbody tr.even td\", properties: [{name: \"background-color\", value: \"#E8E8E8\"}]},\n            {selector: \"td.string\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td.numeric\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td.subtotal\", properties: [{name: \"font-weight\", value: \"bold\"}]},\n            {selector: \"tr.odd td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"tr.even td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \".filtersTitle\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"black\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".hierarchy\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#437C0D\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".separator\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"color\", value: \"#437C0D\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".level\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#D1380E\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".filter\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]}\n    \t]\n\t};\n}",
       "type": "JavaScript"
      },
      {
@@ -326,48 +373,6 @@
       "name": "clickAction",
       "value": "",
       "type": "JavaScript"
-     }
-    ]
-   },
-   {
-    "id": "GENERIC",
-    "name": "Generic",
-    "type": "Label",
-    "typeDesc": "<i>Group</i>",
-    "parent": "UnIqEiD",
-    "properties": [
-     {
-      "name": "Group",
-      "value": "Generic",
-      "type": "Label"
-     }
-    ]
-   },
-   {
-    "id": "7881796f-8eee-4b3f-fc73-7eecc2adf134",
-    "type": "ComponentsParameter",
-    "typeDesc": "Simple parameter",
-    "parent": "GENERIC",
-    "properties": [
-     {
-      "name": "name",
-      "value": "market",
-      "type": "Id"
-     },
-     {
-      "name": "propertyValue",
-      "value": "EMEA",
-      "type": "String"
-     },
-     {
-      "name": "parameterViewRole",
-      "value": "unused",
-      "type": "parameterViewRoleCustom"
-     },
-     {
-      "name": "bookmarkable",
-      "value": "false",
-      "type": "Boolean"
      }
     ]
    }

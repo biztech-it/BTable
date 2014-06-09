@@ -20,7 +20,7 @@
      },
      {
       "name": "resourceCode",
-      "value": ".container {\n    margin-top: 18px;\n    margin-bottom: 18px;\n    margin-left: 22px;\n    width: 904px;\n    font-family: Arial, sans-serif;\n    font-size: 12px;\n}\n\n.buttonBox button {\n    padding: 4px;\n    background-color: #F6F7F8;\n    border: 1px solid #C0C0C0;\n    border-radius: 4px 4px 4px 4px;\n    cursor: pointer;\n    font-family: Arial, sans-serif;\n    font-size: 12px;\n}\n\n.dataTables_wrapper {\n    min-height: 0px;\n}\n\n.tableComponent th {\n    background-color: #83BD4D;\n    border-bottom: 1px solid #C0C0C0;\n    \n}\n\n.tableComponent td {\n    background-color: #FFFFFF;\n    border-bottom: 1px solid #C0C0C0;\n}\n\n.tableComponent td.string {\n    text-align: center;\n} ",
+      "value": ".container {\n    margin-top: 18px;\n    margin-bottom: 18px;\n    margin-left: 22px;\n    width: 904px;\n    font-family: Arial, sans-serif;\n    font-size: 12px;\n}\n\n.buttonBox button {\n    padding: 4px;\n    background-color: #F6F7F8;\n    border: 1px solid #C0C0C0;\n    border-radius: 4px 4px 4px 4px;\n    cursor: pointer;\n    font-family: Arial, sans-serif;\n    font-size: 12px;\n}\n\n.dataTables_wrapper {\n    min-height: 0px;\n}\n\n.tableComponent th {\n    background-color: #83BD4D;\n    border-bottom: 1px solid #C0C0C0;\n}\n\n.tableComponent td {\n    background-color: #FFFFFF;\n    border-bottom: 1px solid #C0C0C0;\n}\n\n.tableComponent td.string {\n    text-align: center;\n}\n\ntable.dataTable.no-footer {\n    border-bottom: none;\n}\n\ntable.dataTable thead th {\n    background-color: #83BD4D;\n    border-bottom: 1px solid #C0C0C0;\n    padding: 4px;\n}\n\ntable.dataTable tbody td {\n    background-color: #FFFFFF;\n    border-bottom: 1px solid #C0C0C0;\n    padding: 4px;\n} ",
       "type": "Resource"
      }
     ]
@@ -490,6 +490,26 @@
       "type": "JavaScript"
      },
      {
+      "name": "actionParameters",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "successCallback",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "failureCallback",
+      "value": "",
+      "type": "JavaScript"
+     },
+     {
+      "name": "Datasource",
+      "value": "",
+      "type": "Datasource"
+     },
+     {
       "name": "priority",
       "value": 5,
       "type": "Integer"
@@ -569,6 +589,16 @@
       "name": "name",
       "value": "createCdaDatasources",
       "type": "Id"
+     },
+     {
+      "name": "stepName",
+      "value": "OUTPUT",
+      "type": "String"
+     },
+     {
+      "name": "kettleOutput",
+      "value": "Inferred",
+      "type": "kettleOutputCustom"
      }
     ],
     "meta": "CPK",
@@ -585,6 +615,16 @@
       "name": "name",
       "value": "listCdaDatasources",
       "type": "Id"
+     },
+     {
+      "name": "stepName",
+      "value": "OUTPUT",
+      "type": "String"
+     },
+     {
+      "name": "kettleOutput",
+      "value": "Inferred",
+      "type": "kettleOutputCustom"
      }
     ],
     "meta": "CPK",

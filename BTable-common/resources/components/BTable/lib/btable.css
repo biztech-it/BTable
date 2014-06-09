@@ -190,9 +190,12 @@ img.unlockedIcon {
 .bTableComponent th {
     border: 1px solid #000;
     background-color: #C3D9FF;
+	font-family: Arial, serif;
+	font-size: 12px;
 } 
 .bTableComponent td {
     border: 1px solid #000; 
+	padding: 4px 4px 4px 4px;
 }
 .bTableComponent tbody tr.odd td {
     background-color: #FFFFFF;
@@ -207,7 +210,6 @@ img.unlockedIcon {
 .bTableComponent td.numeric {
     font-family: Arial, serif;
     font-size: 12px;
-    padding-right: 4px;
 	white-space: nowrap;
 }
 .bTableComponent td.subtotal {
@@ -217,4 +219,22 @@ img.unlockedIcon {
 .bTableComponent tr.even td.grandtotal {
     font-weight: bold;
 	background-color: #C3D9FF;
+}
+
+.bTableComponent table.dataTable.no-footer {
+    border-bottom: none;
+}
+.bTableComponent table.dataTable {
+    box-sizing: border-box;
+}
+.bTableComponent table.dataTable thead th {
+    border: 1px solid #000;
+    background-color: #C3D9FF;
+	padding: 4px 4px 4px 4px;
+	font-family: Arial, serif;
+	font-size: 12px;
+} 
+.bTableComponent table.dataTable tbody td {
+    border: 1px solid #000;
+	padding: 4px 4px 4px 4px;
 }
