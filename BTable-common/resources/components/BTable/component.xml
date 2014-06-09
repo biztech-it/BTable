@@ -61,8 +61,10 @@
 				<Style version="1.01" src="lib/jqueryFileTree/jqueryFileTree.css">jqueryFileTree.css</Style>
 				<Style version="2.7" src="lib/jQuery-Impromptu/jquery.impromptu.css">jquery.impromptu.css</Style>
 				<Style version="1.0" src="lib/popup.css">popup.css</Style>
+				<Style version="1.0" src="lib/ext.css">ext.css</Style>
             </Styles>
             <Dependencies>
+				<Dependency src="lib/bt.ext.js" version="1.0">bt.ext.js</Dependency>
                 <Dependency src="lib/bt.table.js" version="1.0">bt.table.js</Dependency>
                 <Dependency src="lib/bt.query.js" version="1.0">bt.query.js</Dependency>
                 <Dependency src="lib/bt.olap.js" version="1.0">bt.olap.js</Dependency>
