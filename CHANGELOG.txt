@@ -1,6 +1,17 @@
 CHANGELOG
 ---------
 
+v2.1 [2014.06.10]
+
+	NEW FEATURES:
+		* BTable Ext library providing functions to perform a drill from anywhere in a dashboard and to open btable files
+
+	BUG FIXES:
+		* cannot open the context menu in many mobile browsers
+		* the selection of a radio button is not visible in Table Settings submenu
+		* https://github.com/biztech-it/BTable/issues/4
+
+
 v2.0 [2014.03.19]
 
 	NEW FEATURES:
