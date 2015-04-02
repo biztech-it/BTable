@@ -72,6 +72,7 @@
                 <Dependency src="lib/bt.helpers.js" version="1.0">bt.helpers.js</Dependency>
                 <Dependency src="lib/jQuery-contextMenu/jquery.contextMenu.js" version="1.0">jquery.contextMenu.js</Dependency>
                 <Dependency src="lib/jQuery-contextMenu/jquery.ui.position.js" version="1.10">jquery.ui.position</Dependency>                
+                <Dependency src="lib/hynds/jquery.multiselect.js" version="1.13">jquery.multiselect.js</Dependency>
                 <Dependency src="lib/hynds/jquery.multiselect.filter.js" version="1.5">jquery.multiselect.filter.js</Dependency>
 				<Dependency src="lib/form/jquery.form.js" version="3.40">jquery.form.js</Dependency>
 				<Dependency src="lib/jqueryFileTree/jqueryFileTree.js" version="1.01">jqueryFileTree.js</Dependency>
