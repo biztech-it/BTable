@@ -640,7 +640,7 @@ var BTableComponent = UnmanagedComponent.extend({
     var dtData0 = TableComponent.getDataTableOptions(cd);
     
     if(noResult)
-      dtData0.aoColumns = [{sClass:"column0 string", sTitle:"Empty Result", sType:"string"}];
+      dtData0.aoColumns = [{sClass:"column0 string", sTitle:"", sType:"string"}];
     
     // Build a default config from the standard options
     $.each(this.extraOptions ? this.extraOptions : {}, function(i,e){
@@ -649,7 +649,8 @@ var BTableComponent = UnmanagedComponent.extend({
     var dtData = $.extend(cd.dataTableOptions,dtData0,extraOptions);
 
     /* Configure the table event handlers */
-    dtData.fnDrawCallback = _.bind(this.fnDrawCallback,this);
+    if(!noResult)
+      dtData.fnDrawCallback = _.bind(this.fnDrawCallback,this);
     dtData.fnInitComplete = _.bind(this.fnInitComplete,this);
     /* fnServerData is required for server-side pagination */
     if (dtData.bServerSide) {
