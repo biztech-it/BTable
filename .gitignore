@@ -11,6 +11,7 @@
 #CTools temporary files
 *_tmp.cd*
 
+*Thumbs.db
 
 BTable-pentaho/bin/
 BTable-pentaho/dist/
