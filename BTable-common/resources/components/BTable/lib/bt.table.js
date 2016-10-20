@@ -23,117 +23,165 @@ var bt = bt || {};
 bt.components = bt.components || {};
 
 bt.components.BTable = function(spec) {
-	
-    var defaults = {
-    	componentName: "BTable",
-    	componentHtmlObject: "",
-    	catalog: "",
-    	jndi: "",
-       	cube: "",
-        dimensions: [],
-        measures: [],
-        pivotDimensions: [],
-        filters: [],
-        measuresOnColumns: true,
-        orderBy: [],
-        nonEmptyRows: true,
-        nonEmptyColumns: true,
-        grandTotal: false,
-        subTotals: false,
-        pivotGrandTotal: false,
-        pivotSubTotals: false,
-        totalsPosition: "bottom",
-        hideSpans: false,
-        showFilters: true,
-        exportStyle: {},
-		fixedHeader: true,
-		drillTarget: "NEW_TAB", // NEW_TAB (PUC) | NEW_WINDOW (browser) | SELF
-		renderDashboard: false
-    };
-	
+
+	var defaults = {
+			componentName: "BTable",
+			componentHtmlObject: "",
+			catalog: "",
+			jndi: "",
+			cube: "",
+			dimensions: [],
+			measures: [],
+			pivotDimensions: [],
+			filters: [],
+			measuresOnColumns: true,
+			orderBy: [],
+			nonEmptyRows: true,
+			nonEmptyColumns: true,
+			grandTotal: false,
+			subTotals: false,
+			pivotGrandTotal: false,
+			pivotSubTotals: false,
+			totalsPosition: "bottom",
+			hideSpans: false,
+			showFilters: true,
+			exportStyle: {},
+			fixedHeader: true,
+			drillTarget: "NEW_TAB", // NEW_TAB (PUC) | NEW_WINDOW (browser) | SELF
+			renderDashboard: false,
+			showAlarms: true,
+			alarms: [],
+			alarmRules: "",
+			template:"",
+			updateTemplate: false,
+			showTable: true,
+			showZeros: false,
+			showToolbar: true
+	};
+
+	var alarmsDef = '{}';
+
 	var myself = {};
-	
+
 	myself.properties = $.extend({}, defaults, spec);
-	
-    myself.properties.filtersPanelHtmlObject = myself.properties.componentHtmlObject + "FiltersPanel";
+
+	myself.properties.filtersPanelHtmlObject = myself.properties.componentHtmlObject + "FiltersPanel";
+
+	myself.properties.toolbarPanelHtmlObject = myself.properties.componentHtmlObject + "ToolbarPanel";
+
+	myself.properties.toolbarHtmlObject = myself.properties.componentHtmlObject + "Toolbar";
 
 	myself.olapCube = new bt.olap.OlapCube({
-        catalog: myself.properties.catalog,
-        cube: myself.properties.cube,
+		catalog: myself.properties.catalog,
+		cube: myself.properties.cube,
 		jndi: myself.properties.jndi
-    });
-	
+	});
+
 	myself.query = new bt.Query({
 		cube: myself.properties.cube,
-  	  	dimensions: myself.properties.dimensions,
-  	  	measures: myself.properties.measures,
-  	  	pivotDimensions: myself.properties.pivotDimensions,  	  
-  	  	filters: myself.properties.filters,
-	  	measuresOnColumns: myself.properties.measuresOnColumns,
-        nonEmpty: {
-        	columns: myself.properties.nonEmptyColumns,
-        	rows: myself.properties.nonEmptyRows
-        },
-        summary: {
-        	grandTotal: myself.properties.grandTotal,
-        	subTotals: myself.properties.subTotals,
-        	pivotGrandTotal: myself.properties.pivotGrandTotal,
-        	pivotSubTotals: myself.properties.pivotSubTotals,
-        	position: myself.properties.totalsPosition
-        },
-        orders: myself.properties.orderBy
-    }, myself.olapCube);
-	
+		dimensions: myself.properties.dimensions,
+		measures: myself.properties.measures,
+		pivotDimensions: myself.properties.pivotDimensions,  	  
+		filters: myself.properties.filters,
+		measuresOnColumns: myself.properties.measuresOnColumns,
+		nonEmpty: {
+			columns: myself.properties.nonEmptyColumns,
+			rows: myself.properties.nonEmptyRows
+		},
+		summary: {
+			grandTotal: myself.properties.grandTotal,
+			subTotals: myself.properties.subTotals,
+			pivotGrandTotal: myself.properties.pivotGrandTotal,
+			pivotSubTotals: myself.properties.pivotSubTotals,
+			position: myself.properties.totalsPosition
+		},
+		orders: myself.properties.orderBy
+	}, myself.olapCube);
+
 	var normalizedCdaResult = {};
-	
+
 	myself.normalizeCdaJson = function(json) {
-	    var normalizedJson = json;
-	    
-	    var hasMoC = myself.query.hasMeasuresOnColumns();
-	    var dimensionQualifiedNames = myself.query.getDimensionQualifiedNames();
-	    var pivotDimensionQualifiedNames = myself.query.getPivotDimensionQualifiedNames();
-	    var measureQualifiedNames = myself.query.getMeasureQualifiedNames();
-	    
+		var normalizedJson = json;
+
+		var hasMoC = myself.query.hasMeasuresOnColumns();
+		var dimensionQualifiedNames = myself.query.getDimensionQualifiedNames();
+		var pivotDimensionQualifiedNames = myself.query.getPivotDimensionQualifiedNames();
+		var measureQualifiedNames = myself.query.getMeasureQualifiedNames();
+
+		//Replace measure placeholder with Measure Name + Measure Index
+		$.grep(json.metadata, function (v) {
+			var colName = v.colName;
+			var startPos = colName.indexOf("[Measures].[Measure"); 
+			if(startPos >= 0 && colName != "[Measures].[MeasuresLevel]") {
+				var endPos = colName.indexOf("]", startPos + 19);
+				var measureIdx = colName.substring(startPos + 19,endPos);
+				v.colName = colName.replace(colName.substring(startPos,endPos + 1),measureQualifiedNames[measureIdx]);
+				v.colMeasureIdx = measureIdx;
+				v.colIsCalculated = (myself.query.definition.measures[measureIdx][1] != "");
+				v.colFormat = myself.query.measuresAttr[measureIdx]["format"];
+			} 
+		});
+
 		var unwantedColumns = [];
 		normalizedJson.metadata = $.grep(json.metadata, function (i) {
-		    // remove *.[(All)] columns generated by CDA when classic BandedMode
+			// remove *.[(All)] columns generated by CDA when classic BandedMode
 			// remove not required hierarchy levels when MoC (their columns are generated by
-		    // Hierarchize or Descendants MDX functions)
+			// Hierarchize or Descendants MDX functions)
 
 			var colName = i.colName;
 			var remove = colName.endsWith("[(All)]") || (
-			    colName.indexOf("]/[") < 0 && (
-				    (hasMoC && $.inArray(colName, dimensionQualifiedNames) < 0
-				        && $.inArray(colName, measureQualifiedNames) < 0) ||
-					(!hasMoC && colName != "[Measures].[MeasuresLevel]"
-					    && $.inArray(colName, pivotDimensionQualifiedNames) < 0
-					    && $.inArray(colName.split("].[")[0], $.map(dimensionQualifiedNames, function(e){ return e.split("].[")[0]; })) < 0
-					    && $.inArray("[" + colName.split("].[")[1], $.map(dimensionQualifiedNames, function(e){ return e.split("].[")[0]; })) < 0)
-				)
+					colName.indexOf("]/[") < 0 && (
+							(hasMoC && $.inArray(colName, dimensionQualifiedNames) < 0
+									&& $.inArray(colName, measureQualifiedNames) < 0) ||
+									(!hasMoC && colName != "[Measures].[MeasuresLevel]"
+										&& $.inArray(colName, pivotDimensionQualifiedNames) < 0
+										&& $.inArray(colName.split("].[")[0], $.map(dimensionQualifiedNames, function(e){ return e.split("].[")[0]; })) < 0
+										&& $.inArray("[" + colName.split("].[")[1], $.map(dimensionQualifiedNames, function(e){ return e.split("].[")[0]; })) < 0)
+					)
 			);
-	        
+
 			if(remove) unwantedColumns.push(i.colIndex);
-	        return !remove;
-	    });
-	    $.each(json.resultset, function(i, v) {
-	    	normalizedJson.resultset[i] = $.grep(v, function(o, j) {
-	            return $.inArray(j, unwantedColumns) < 0;
-	        });
-	    });
-	    
-	    $.each(normalizedJson.metadata, function(i, v) {
-	    	var colName = v.colName;
-	    	if(colName.indexOf("]/[") > 0 || $.inArray(colName, measureQualifiedNames) >= 0) {
-	    		v.colType = "numeric";
-	    	} else {
-	    		if(colName != "[Measures].[MeasuresLevel]" && $.inArray(colName, dimensionQualifiedNames) < 0 && $.inArray(colName, pivotDimensionQualifiedNames) < 0)
-	    			v.colType = "numeric";
-	    		else
-	    			v.colType = "string";
-	    	}
-	    });
-	    
-		
+			return !remove;
+		});
+
+//		$.each(json.resultset, function(i, v) {
+//		if (typeof v !== 'undefined' && v !== null) {
+//		normalizedJson.resultset[i] = {"delete"};
+//		v[i] = {"delete"};
+//		}
+//		});
+
+//		$.each(json.resultset, function(i, v) {
+//		if (typeof v === 'undefined' && v == null) {
+//		//normalizedJson.resultset[i] = {"delete"};
+//		delete json.resultset[i];
+//		delete normalizedJson.resultset[i];
+//		}
+//		});
+
+
+		json.resultset = json.resultset.filter(function(n){ return n });
+		normalizedJson.resultset = normalizedJson.resultset.filter(function(n){ return n });
+
+		$.each(json.resultset, function(i, v) {
+			normalizedJson.resultset[i] = $.grep(v, function(o, j) {
+				return $.inArray(j, unwantedColumns) < 0;
+			});
+		});
+
+		$.each(normalizedJson.metadata, function(i, v) {
+			var colName = v.colName;
+			if(colName.indexOf("]/[") > 0 || $.inArray(colName, measureQualifiedNames) >= 0) {
+				v.colType = "numeric";
+			} else {
+				if(colName != "[Measures].[MeasuresLevel]" && $.inArray(colName, dimensionQualifiedNames) < 0 && $.inArray(colName, pivotDimensionQualifiedNames) < 0)
+					v.colType = "numeric";
+				else
+					v.colType = "string";
+			}
+		});
+
+
 		if(!hasMoC) {
 			var measuresLevelColIdx = -1;
 			$.each(normalizedJson.metadata, function(i, v) {
@@ -141,30 +189,38 @@ bt.components.BTable = function(spec) {
 					measuresLevelColIdx = i;
 				}
 			});
+			//Replace measure placeholder with Measure Name + Measure Index
 			if(measuresLevelColIdx > -1) {
 				$.each(normalizedJson.resultset, function(i, v) {
 					var measureName = normalizedJson.resultset[i][measuresLevelColIdx];
-					var measureCaption = myself.olapCube.getCaption("[Measures].[" + measureName + "]");
-					normalizedJson.resultset[i][measuresLevelColIdx] = measureCaption;
+					if (measureName != "[Measures].[MeasuresLevel]") {
+						var measureIdx = measureName.substring(7,measureName.lenght);
+						measureName = measureQualifiedNames[measureIdx];
+						//var measureCaption = myself.olapCube.getCaption("[Measures].[" + measureName + "]");
+						var measureCaption = myself.olapCube.getCaption(measureName);
+						normalizedJson.resultset[i][measuresLevelColIdx] = measureCaption + "|" + measureIdx;
+					} else {
+						normalizedJson.resultset[i][measuresLevelColIdx] = "[Measures].[MeasuresLevel]";
+					}
 				});
 			}
 		}
-		
-	    normalizedCdaResult = normalizedJson;	
-		
-	    return normalizedJson;
+
+		normalizedCdaResult = normalizedJson;	
+
+		return normalizedJson;
 	}
 
 	var headers = [];
 	var oldHeaders = []
-	
+
 	myself.getHeaders = function() {
 		return headers;
 	}
-	
+
 	myself.setHeaders = function(cdaHeaders) {
 		headers = [];
-		
+
 		var getCaption = function(qualifiedName, value) {
 			var caption = "";
 			if(value == "[Measures].[MeasuresLevel]")
@@ -200,85 +256,109 @@ bt.components.BTable = function(spec) {
 			var compressedMembersList = [];
 			if(isLastRow || myself.properties.hideSpans) {
 				$.each(uncompressedMembersList, function(i, value) {
+					var measureIdx = -1;
+					if (value.indexOf("|")>=0) {
+						var splittedValues = value.split("|");
+						value = splittedValues[0]; 
+						measureIdx = splittedValues[1]; 
+					}
 					compressedMembersList.push({
 						level: getLevel(qualifiedName, value),
 						member: value,
 						caption: getCaption(qualifiedName, value), 
 						colspan: 1,
-						rowspan: myself.properties.hideSpans ? 1 : rowSpans[i]
+						rowspan: myself.properties.hideSpans ? 1 : rowSpans[i],
+								measureIdx: measureIdx 
 					});
 				});
 			} else {
 				var count = 0;
 				var previousValue = "";
 				var previousRowSpan = 0;
+				var previousMeasureIdx = -1;
 				$.each(uncompressedMembersList, function(i, value) {
-					if((value != previousValue && previousValue != "") || (value == previousValue && rowSpans[i] != previousRowSpan)) {
+					var measureIdx = -1;
+					if (value.indexOf("|")>=0) {
+						var splittedValues = value.split("|");
+						value = splittedValues[0]; 
+						measureIdx = splittedValues[1]; 
+					}
+					if((value != previousValue && previousValue != "") || (measureIdx != previousMeasureIdx && previousMeasureIdx != "") || (value == previousValue && rowSpans[i] != previousRowSpan)) {
 						compressedMembersList.push({
 							level: getLevel(qualifiedName, previousValue),
 							member: previousValue,
 							caption: getCaption(qualifiedName, previousValue),
 							colspan: count,
-							rowspan: previousRowSpan
+							rowspan: previousRowSpan,
+							measureIdx: previousMeasureIdx 
 						});
 						count = 0;
 					}
 					previousValue = value;
 					previousRowSpan = rowSpans[i];
+					previousMeasureIdx = measureIdx;
 					count++;
 				});
-                compressedMembersList.push({
-                    level: getLevel(qualifiedName, previousValue),
-                    member: previousValue,
-                    caption: getCaption(qualifiedName, previousValue),
-                    colspan: count,
-                    rowspan: previousRowSpan
-                });
+				compressedMembersList.push({
+					level: getLevel(qualifiedName, previousValue),
+					member: previousValue,
+					caption: getCaption(qualifiedName, previousValue),
+					colspan: count,
+					rowspan: previousRowSpan,
+					measureIdx: previousMeasureIdx 
+				});
 			}
-			
+
 			compressedMembersList = $.grep(compressedMembersList, function(e, i) {
 				return e.rowspan > 0;
 			});
-			
+
 			return compressedMembersList;
 		}		
-		
+
 		var querySetting = myself.query.getSettings();
-		
+
 		if(!querySetting.measuresOnColumns) {
 
 			var splittedCdaHeaders = [];
 			$.each(cdaHeaders, function(i, v) {
-				var splittedHeader = v.split("]/[");
+				var splittedHeader = v.colName.split("]/[");
 				var length = splittedHeader.length;
 				if(length > 1) {
 					splittedHeader[0] += "]";
+					if (splittedHeader[0].indexOf("[Measures]") >= 0)
+						splittedHeader[0] += "|"+v.colMeasureIdx;
 					for(j = 1; j < length-1; j++) {
 						splittedHeader[j] = "[" + splittedHeader[j] + "]";
+						if (splittedHeader[j].indexOf("[Measures]") >= 0)
+							splittedHeader[j] += "|"+v.colMeasureIdx;
+
 					}
 					splittedHeader[length-1] = "[" + splittedHeader[length-1];
-				}
+				} else if (splittedHeader[0].indexOf("[Measures]") >= 0 && splittedHeader[0] != "[Measures].[MeasuresLevel]")
+					splittedHeader[0] += "|"+v.colMeasureIdx;
+
 				splittedCdaHeaders.push(splittedHeader);
 			});
 
 
 			var lastElementIndex = splittedCdaHeaders.length - 1;
-			
+
 			var dimensionQualifiedNames = myself.query.getDimensionQualifiedNames();
 			var pivotDimensionQualifiedNames = myself.query.getPivotDimensionQualifiedNames();
-			
+
 			var hh = new Array();
 			var levelQualifiedNames = dimensionQualifiedNames.slice().reverse();
 			var previousHierarchy = ""; 
 			var maxLevelDepth = 1;
 			for(i = 0; i < levelQualifiedNames.length; i++) {
 				var levelQualifiedName = levelQualifiedNames[i];
-								
+
 				var hierarchy = levelQualifiedName.split("].[")[0].substring(1);
-				
+
 				if(levelQualifiedName.indexOf("].[") < 0)
 					hierarchy = hierarchy.substring(0, hierarchy.length-1);
-				
+
 				var index = -1;
 				$.each(splittedCdaHeaders[lastElementIndex], function(j, w) {
 					if(w.indexOf("[" + hierarchy + "]") > -1 || w.indexOf("[" + hierarchy + "." + hierarchy + "]") > -1) {
@@ -286,49 +366,53 @@ bt.components.BTable = function(spec) {
 						return;
 					}
 				});
-				
+
 
 				hh[levelQualifiedName] = [];
-				
+
 				if(index >= 0) {
-				
+
 					for(j = 0; j < splittedCdaHeaders.length; j++) {
 						var member = splittedCdaHeaders[j][0];
 						if(splittedCdaHeaders[j].length > 1 || (member != "[Measures].[MeasuresLevel]" && $.inArray(member, pivotDimensionQualifiedNames) < 0)) {
 							var memberUniqueNameParts = splittedCdaHeaders[j][index].split("].[").reverse();
 							member = memberUniqueNameParts[0];
-							member = member.substring(0, member.length-1);					
+							if (member.indexOf("|")) {
+								member = member.replace("]", "");			
+							} else {
+								member = member.substring(0, member.length-1);			
+							}
 							if(hierarchy == previousHierarchy && member != "BT_TOTAL") {
 								member = memberUniqueNameParts[maxLevelDepth - myself.olapCube.getLevelDepth(levelQualifiedName)];
 							}
 						}
 						hh[levelQualifiedName].push(member);
 					}
-	
+
 					if(hierarchy != previousHierarchy) {
 						previousHierarchy = hierarchy;
 						maxLevelDepth = myself.olapCube.getLevelDepth(levelQualifiedName);
 					}
-				
+
 				}
 
 			}
 
 
 			var ohh = new Array();
-			
+
 			$.each(dimensionQualifiedNames, function(i, v) {
 				if(hh[v].length > 0)
 					ohh.push(hh[v]);
 			});
 
 			var ors = new Array(ohh.length);
-			
+
 			for(i = 0; i < ohh.length; i++) {
 				ors[i] = new Array(ohh[i].length);
 			}
-			
-			
+
+
 			$.each(ohh, function(i, row) {
 				$.each(row, function(j, v) {
 					if(ors[i][j] != 0) {
@@ -347,7 +431,7 @@ bt.components.BTable = function(spec) {
 					}
 				});
 			});
-			
+
 
 			var newIndex = -1;
 			$.each(dimensionQualifiedNames, function(i, v) {
@@ -359,29 +443,35 @@ bt.components.BTable = function(spec) {
 				else
 					newIndex--;
 			});
-			
+
 		}
 
 		else {
 			var splittedCdaHeaders = [];
 			$.each(cdaHeaders, function(i, v) {
-				var splittedHeader = v.split("]/[");
+				var splittedHeader = v.colName.split("]/[");
 				var length = splittedHeader.length;
 				if(length > 1) {
 					splittedHeader[0] += "]";
+					if (splittedHeader[0].indexOf("[Measures]") >= 0)
+						splittedHeader[0] += "|"+v.colMeasureIdx;
 					for(j = 1; j < length-1; j++) {
 						splittedHeader[j] = "[" + splittedHeader[j] + "]";
+						if (splittedHeader[j].indexOf("[Measures]") >= 0)
+							splittedHeader[j] += "|"+v.colMeasureIdx;
 					}
 					splittedHeader[length-1] = "[" + splittedHeader[length-1];
-				}
+				} else if (splittedHeader[0].indexOf("[Measures]") >= 0)
+					splittedHeader[0] += "|"+v.colMeasureIdx;
+
 				splittedCdaHeaders.push(splittedHeader);
 			});
-			
+
 
 			var lastElementIndex = splittedCdaHeaders.length - 1;
-			
+
 			var hh = new Array();
-			
+
 			var pivotDimensionQualifiedNames = myself.query.getPivotDimensionQualifiedNames();
 			if($.inArray("MEASURES", pivotDimensionQualifiedNames) < 0)
 				pivotDimensionQualifiedNames.push("[Measures].[]");
@@ -389,14 +479,14 @@ bt.components.BTable = function(spec) {
 				pivotDimensionQualifiedNames = $.map(pivotDimensionQualifiedNames, function(qn) {
 					return qn == "MEASURES" ? "[Measures].[]" : qn;
 				});
-			
+
 			var levelQualifiedNames = pivotDimensionQualifiedNames.slice().reverse(); //slice() to copy the array
 			var previousHierarchy = ""; 
 			var maxLevelDepth = 1;
 			for(i = 0; i < levelQualifiedNames.length; i++) {
 				var levelQualifiedName = levelQualifiedNames[i];
 				var hierarchy = levelQualifiedName.split("].[")[0].substring(1);
-								
+
 				var index = -1;
 				$.each(splittedCdaHeaders[lastElementIndex], function(j, w) {
 					if(w.indexOf("[" + hierarchy + "]") > -1 || w.indexOf("[" + hierarchy + "." + hierarchy + "]") > -1) {
@@ -404,18 +494,22 @@ bt.components.BTable = function(spec) {
 						return;
 					}
 				});
-				
+
 
 				hh[levelQualifiedName] = [];
-			
+
 				if(index >= 0) {
-					
+
 					for(j = 0; j < splittedCdaHeaders.length; j++) {
 						var member = splittedCdaHeaders[j][0];
 						if(splittedCdaHeaders[j].length > 1) {
 							var memberUniqueNameParts = splittedCdaHeaders[j][index].split("].[").reverse();
 							member = memberUniqueNameParts[0];
-							member = member.substring(0, member.length-1);			
+							if (member.indexOf("|")) {
+								member = member.replace("]", "");			
+							} else {
+								member = member.substring(0, member.length-1);			
+							}
 							if(hierarchy == previousHierarchy && member != "BT_TOTAL") {
 								member = memberUniqueNameParts[maxLevelDepth - myself.olapCube.getLevelDepth(levelQualifiedName)];
 							}
@@ -423,31 +517,31 @@ bt.components.BTable = function(spec) {
 						//console.log(levelQualifiedName + " -> " + member);
 						hh[levelQualifiedName].push(member);
 					}
-	
+
 					if(hierarchy != previousHierarchy) {
 						previousHierarchy = hierarchy;
 						maxLevelDepth = myself.olapCube.getLevelDepth(levelQualifiedName);
 					}
-					
+
 				}
 
 			}
-			
+
 
 			var ohh = new Array();
-			
+
 			$.each(pivotDimensionQualifiedNames, function(i, v) {
 				if(hh[v].length > 0)
 					ohh.push(hh[v]);
 			});
 
 			var ors = new Array(ohh.length);
-			
+
 			for(i = 0; i < ohh.length; i++) {
 				ors[i] = new Array(ohh[i].length);
 			}
-			
-			
+
+
 			$.each(ohh, function(i, row) {
 				$.each(row, function(j, v) {
 					if(ors[i][j] != 0) {
@@ -466,7 +560,7 @@ bt.components.BTable = function(spec) {
 					}
 				});
 			});
-			
+
 
 			var newIndex = -1;
 			$.each(pivotDimensionQualifiedNames, function(i, v) {
@@ -478,12 +572,12 @@ bt.components.BTable = function(spec) {
 				else
 					newIndex--;
 			});
-			
+
 		}
-	
-	
+
+
 	}
-	
+
 
 	myself.getElementType = function(qualifiedName) {
 		if(qualifiedName == "[Measures].[MeasuresLevel]")
@@ -507,10 +601,10 @@ bt.components.BTable = function(spec) {
 
 	myself.getMenuTitle = function(btRef) {
 		var title = "";
-		
+
 		var level = btRef.level;
 		var member = btRef.member;
-		
+
 		if(!myself.query.hasMeasuresOnColumns()) {
 			if(level.indexOf("[Measures].[") == 0 && level != "[Measures].[MeasuresLevel]") {
 				if(isNaN(parseFloat(member))) {
@@ -527,11 +621,11 @@ bt.components.BTable = function(spec) {
 				}
 			}
 		}
-		
+
 		var qualifiedName = level;
-	  	if(level.indexOf("].[") < 0)
-	  		qualifiedName += ".[" + member + "]";
-	  	
+		if(level.indexOf("].[") < 0)
+			qualifiedName += ".[" + member + "]";
+
 		if(qualifiedName == "[Measures].[MeasuresLevel]")
 			title = $.i18n.prop("table_measures");
 		else {
@@ -540,7 +634,7 @@ bt.components.BTable = function(spec) {
 				title += (fullNameParts[0] == "Measures" ? $.i18n.prop("table_measures") : fullNameParts[0]) + " -> ";
 			title += fullNameParts[1];
 		}		
-		
+
 		if(member != level && level.indexOf("].[") > -1 && (level.indexOf("[Measures]") < 0 || "[Measures].[" + member + "]" != level)) {
 			title += "<br />" + (member == "BT_TOTAL" ? $.i18n.prop("table_total") : (member == null ? "<i>NULL</i>" : (!isNaN(parseFloat(member)) && member.toString().indexOf(" ") < 0 && !btRef.colspan && level.indexOf("[Measures].[") > -1 ? getLocalizedFormattedValue(myself.olapCube.getFormatStrings()[qualifiedName], member) : member)));
 		}
@@ -554,24 +648,24 @@ bt.components.BTable = function(spec) {
 	myself.setMeasures = function(measures) {
 		myself.query.setMeasures(measures);
 	};
-	
+
 	myself.enableGrandTotal = function() {
 		myself.query.set({summary: {
-        	grandTotal: true
-        }});
+			grandTotal: true
+		}});
 	};
 
 	myself.disableGrandTotal = function() {
 		myself.query.set({summary: {
-        	grandTotal: false
-        }});
+			grandTotal: false
+		}});
 	};
-	
+
 	myself.hasMeasuresOnColumns = function() {
 		return myself.query.hasMeasuresOnColumns();
 	};
 
-	myself.printFilters = function() {
+	myself.printFilters = function(tooltip) {
 		var dimensions = $.grep(myself.query.getDimensions(), function(e) {
 			return e[1] != "" && e[0].indexOf("].[") > 0;
 		});
@@ -582,14 +676,14 @@ bt.components.BTable = function(spec) {
 
 
 		var html = "";
-		
+
 		var previousHierarchy = "";
-		
+
 		$.each(dimensions, function(i, v) {
 			var qualifiedName = v[0];
 			var plainFilter = v[1];
 			var hierarchy = qualifiedName.split("].[")[0].substring(1).replace("]", "");
-						
+
 			var filterParts = plainFilter.split(":[");
 			var filterMode = filterParts[0].replace("_un", "");
 			var prettyFilter = filterParts[1];
@@ -603,24 +697,24 @@ bt.components.BTable = function(spec) {
 					return "[" + parts.join("].[");	
 				}).join(" , ");
 			}
-			
+
 			if(filterMode == "exclude")
 				prettyFilter = $.i18n.prop("filters_display_except", prettyFilter.split("SPLIT_TO_CONVERT_STRING_TO_ARRAY"));
 			else if(filterMode == "between")
 				prettyFilter = $.i18n.prop("filters_display_between", prettyFilter.split(" , "));
-			
+
 			if(hierarchy != previousHierarchy)
 				html += "&nbsp;&nbsp;<span class='hierarchy'>" + myself.olapCube.getCaption("[" + hierarchy + "]") + "</span>";
 			html += "<span class='separator'> " + $.i18n.prop("filters_display_separator") + " </span><a href='#' class='level' data-qn='" + qualifiedName + "'>" + myself.olapCube.getCaption(qualifiedName) + "</a>: <span class='filter'>" + prettyFilter + "</span>";
-						
+
 			previousHierarchy = hierarchy;
 		});
-		
+
 		$.each(pivotDimensions, function(i, v) {
 			var qualifiedName = v[0];
 			var plainFilter = v[1];
 			var hierarchy = qualifiedName.split("].[")[0].substring(1).replace("]", "");
-			
+
 			var filterParts = plainFilter.split(":[");
 			var filterMode = filterParts[0].replace("_un", "");
 			var prettyFilter = filterParts[1];
@@ -634,7 +728,7 @@ bt.components.BTable = function(spec) {
 					return "[" + parts.join("].[");	
 				}).join(" , ");
 			}
-			
+
 			if(filterMode == "exclude")
 				prettyFilter = $.i18n.prop("filters_display_except", prettyFilter.split("SPLIT_TO_CONVERT_STRING_TO_ARRAY"));
 			else if(filterMode == "between")
@@ -643,15 +737,15 @@ bt.components.BTable = function(spec) {
 			if(hierarchy != previousHierarchy)
 				html += "&nbsp;&nbsp;<span class='hierarchy'>" + myself.olapCube.getCaption("[" + hierarchy + "]") + "</span>";
 			html += "<span class='separator'> " + $.i18n.prop("filters_display_separator") + " </span><a href='#' class='level' data-qn='" + qualifiedName + "'>" + myself.olapCube.getCaption(qualifiedName) + "</a>: <span class='filter'>" + prettyFilter + "</span>";
-						
+
 			previousHierarchy = hierarchy;
 		});
-		
+
 		$.each(filters, function(i, v) {
 			var qualifiedName = v[0];
 			var plainFilter = v[1];
 			var hierarchy = qualifiedName.split("].[")[0].substring(1).replace("]", "");
-			
+
 			var filterParts = plainFilter.split(":[");
 			var filterMode = filterParts[0].replace("_un", "");
 			var prettyFilter = filterParts[1];
@@ -665,7 +759,7 @@ bt.components.BTable = function(spec) {
 					return "[" + parts.join("].[");	
 				}).join(" , ");
 			}
-			
+
 			if(filterMode == "exclude")
 				prettyFilter = $.i18n.prop("filters_display_except", prettyFilter.split("SPLIT_TO_CONVERT_STRING_TO_ARRAY"));
 			else if(filterMode == "between")
@@ -674,33 +768,39 @@ bt.components.BTable = function(spec) {
 			if(hierarchy != previousHierarchy)
 				html += "&nbsp;&nbsp;<span class='hierarchy'>" + myself.olapCube.getCaption("[" + hierarchy + "]") + "</span>";
 			html += "<span class='separator'> " + $.i18n.prop("filters_display_separator") + " </span><a href='#' class='level' data-qn='" + qualifiedName + "'>" + myself.olapCube.getCaption(qualifiedName) + "</a>: <span class='filter'>" + prettyFilter + "</span>";
-						
+
 			previousHierarchy = hierarchy;
 		});
-		
+
 		if(html.length == 0)
 			html = "&nbsp;&nbsp;none";
-		
+
 		var prefix = myself.query.isSynchronizedByParameters() ? "" : "un";
-		html = "<a href='#' class='filtersTitle' data-qn=''>" + $.i18n.prop("filters_display_title") + "</a>:&nbsp;&nbsp;<img src='" + bt.helpers.general.getImgDirPath() + prefix + "locked.png' class='" + prefix + "lockedIcon' />" + html;
-				
+
+		if(this.properties.showTable)
+			html = "<table class='filterPanelTable'><tr><td  class='filterPanelTd' width='90%' ><a href='#' class='filtersTitle' data-qn=''>" + $.i18n.prop("filters_display_title") + "</a>:&nbsp;&nbsp;<img src='" + bt.helpers.general.getImgDirPath() + prefix + "locked.png' class='" + prefix + "lockedIcon' />" + html 
+			+ "</td><td class='btablesizes' width='10%'>" + tooltip + "</td></tr></table>";
+		else 
+			html = "<table class='filterPanelTable'><tr><td  class='filterPanelTd' width='90%' ><a href='#' class='filtersTitle' data-qn=''>" + $.i18n.prop("filters_display_title") + "</a>:&nbsp;&nbsp;<img src='" + bt.helpers.general.getImgDirPath() + prefix + "locked.png' class='" + prefix + "lockedIcon' />" + html 
+			+ "</td></tr></table>";
+
 		var filtersPanelDiv = $("#" + myself.properties.filtersPanelHtmlObject);
 		filtersPanelDiv.html(html);
 		filtersPanelDiv.find("a").bind("click", function(){
 			var qn = $(this).data("qn");
-			myself.openFiltersSelectorPanel(qn);
+			myself.openFiltersSelectorPanel(qn, "", "", "");
 		});
-		
+
 
 		var ordersMap = myself.query.getOrdersMap();
 		var dimensionsAxisSorted = ordersMap.axes.hasOwnProperty("dimensions");
 		var measuresAxisSorted = ordersMap.axes.hasOwnProperty("measures");
-		
+
 		if(dimensionsAxisSorted || measuresAxisSorted) {
 			var hasMoC = myself.query.hasMeasuresOnColumns();
 			var columnsAxisName = (hasMoC && measuresAxisSorted) ? "measures" : ((!hasMoC && dimensionsAxisSorted) ? "dimensions" : "");
 			var rowsAxisName = (hasMoC && dimensionsAxisSorted) ? "dimensions" : ((!hasMoC && measuresAxisSorted) ? "measures" : "");
-			
+
 			html = "";
 			if(columnsAxisName != "") {
 				var columnsSort = ordersMap.axes[columnsAxisName];
@@ -736,10 +836,10 @@ bt.components.BTable = function(spec) {
 					html += "<img src='" + bt.helpers.general.getImgDirPath() + "bdesc.png' class='sortIcon' title='" + $.i18n.prop("sorts_display_order_bdesc") + "' data-target='" + axisLetter + "' data-by='" + by + "' data-dir='BDESC' />";
 				html += "<img src='" + bt.helpers.general.getImgDirPath() + "clear.png' class='sortIcon' title='" + $.i18n.prop("sorts_display_clear") + "' data-target='" + axisLetter + "' data-by='' data-dir='' />";
 			}
-			
+
 			html = "<div style='margin-top:5px'><span class='filtersTitle'>" + $.i18n.prop("sorts_display_title") + "</span>: " + html + "</div>";
-			
-			filtersPanelDiv.append(html);			
+
+			filtersPanelDiv.append(html);
 
 			filtersPanelDiv.find(".sortIcon").bind("click", function(){
 				var target = $(this).data("target");
@@ -750,36 +850,127 @@ bt.components.BTable = function(spec) {
 			});
 
 		}
-		
-	};
-	
 
-	myself.openFiltersSelectorPanel = function(selectedLevel) {
+	};
+
+	myself.createToolbar = function() {
+		var toolbarPanelDiv = $("#" + myself.properties.toolbarPanelHtmlObject);
+		if (w2ui[myself.properties.toolbarHtmlObject] == null) {
+			toolbarPanelDiv.w2toolbar({
+				name: myself.properties.toolbarHtmlObject,
+				items: [
+				        { type: "button",  id: "save", img: "save", hint: $.i18n.prop("menu_item_file_save") },
+				        { type: "button",  id: "saveAs", img: "saveAs", hint: $.i18n.prop("menu_item_file_save_as") },
+				        { type: "break",  id: "break0" },
+				        { type: "button",  id: "reset", img: "reset", hint: $.i18n.prop("menu_item_reset") },
+				        { type: "button",  id: "back", img: "back", hint: $.i18n.prop("menu_item_back") },
+				        { type: "break",  id: "break1" },
+				        { type: "button",  id: "granTotal", img: "granTotal", hint: $.i18n.prop("menu_item_table_settings_grand_total") },
+				        { type: "button",  id: "subTotals", img: "subTotals", hint: $.i18n.prop("menu_item_table_settings_subtotals") },
+				        { type: "button",  id: "pivotGrandTotal", img: "pivotGrandTotal", hint: $.i18n.prop("menu_item_table_settings_pivot_grand_total") },
+				        { type: "button",  id: "pivotSubTotals", img: "pivotSubTotals", hint: $.i18n.prop("menu_item_table_settings_pivot_subtotals") },
+				        { type: "break",  id: "break2" },
+				        { type: "button",  id: "filter", img: "filter", hint: $.i18n.prop("menu_item_filters_manager") },
+				        { type: "break",  id: "break3" },
+				        { type: "button",  id: "excel", img: "excel", hint: $.i18n.prop("menu_item_export_to_excel") },
+				        { type: "break",  id: "break4" },
+				        { type: "button",  id: "template", img: "template", hint: $.i18n.prop("menu_item_template") },
+				        { type: "button",  id: "filterHide", img: "filterHide", hint: $.i18n.prop("menu_item_hide_filters_and_sorts") },
+				        { type: "break",  id: "break5" }
+				        ],
+				        onClick: function (event) {
+				        	var settings = myself.query.getSettings();
+
+				        	switch(event.target) {
+
+				        	case "reset":
+				        		myself.query.reset();
+				        		break;
+				        	case "back":
+				        		if (myself.query.hasHistory())
+				        			myself.query.restoreFromHistory();
+				        		break;
+				        	case "granTotal":
+				        		myself.query.set({summary: {grandTotal: !settings.summary.grandTotal}});
+				        		break;
+				        	case "subTotals":
+				        		myself.query.set({summary: {subTotals: !settings.summary.subTotals}});
+				        		break;
+				        	case "pivotGrandTotal":
+				        		myself.query.set({summary: {pivotGrandTotal: !settings.summary.pivotGrandTotal}});
+				        		break;
+				        	case "pivotSubTotals":
+				        		myself.query.set({summary: {pivotSubTotals: !settings.summary.pivotSubTotals}});
+				        		break;
+				        	case "save":
+				        		var btfile = Dashboards.getQueryParameter("btfile");
+				        		var alreadySaved = btfile !== undefined && btfile != "";
+				        		if(alreadySaved) {
+				        			myself.saveCall();
+				        		}
+				        		break;
+				        	case "saveAs":
+				        		myself.saveAs();
+				        		break;
+				        	case "filter":
+								myself.openFiltersSelectorPanel("", "", "", "");
+				        		break;
+				        	case "excel":
+								myself.exportToExcel();
+				        		break;
+				        	case "template":
+								myself.loadTemplate();
+				        		break;
+				        	case "filterHide":
+								myself.properties.showFilters = !myself.properties.showFilters;
+								$("#" + myself.properties.filtersPanelHtmlObject).toggle();
+				        		break;
+				        	}
+				        	settings.summary.grandTotal ? w2ui[myself.properties.toolbarHtmlObject].check('granTotal') : w2ui[myself.properties.toolbarHtmlObject].uncheck('granTotal');
+				        	settings.summary.subTotals ? w2ui[myself.properties.toolbarHtmlObject].check('subTotals') : w2ui[myself.properties.toolbarHtmlObject].uncheck('subTotals');
+				        	settings.summary.pivotGrandTotal ? w2ui[myself.properties.toolbarHtmlObject].check('pivotGrandTotal') : w2ui[myself.properties.toolbarHtmlObject].uncheck('pivotGrandTotal');
+				        	settings.summary.pivotSubTotals ? w2ui[myself.properties.toolbarHtmlObject].check('pivotSubTotals') : w2ui[myself.properties.toolbarHtmlObject].uncheck('pivotSubTotals');
+							!myself.properties.showFilters ? w2ui[myself.properties.toolbarHtmlObject].check('filterHide') : w2ui[myself.properties.toolbarHtmlObject].uncheck('filterHide');
+
+				        	w2ui[myself.properties.toolbarHtmlObject].refresh();
+				        	Dashboards.getComponent(myself.properties.componentName).update();
+				        }
+			});		
+		} else {
+			$(toolbarPanelDiv).w2render(myself.properties.toolbarHtmlObject);
+		}
+
+	};
+
+	myself.openFiltersSelectorPanel = function(selectedLevel, pluginId, endpoint, opts) {
 		var refreshTable = false;
-		
+
 		var filtersMap = myself.query.getFiltersMap();
 
 		var html = "<div id='filtersSelectorPanel'><div class='topBox'><div class='topBoxLeft'>";
-		
-		html += "<span class='btTitle'>" + $.i18n.prop("filters_manager_title") + "</span><button id='dashboardBindingButton'>" + (filtersMap.synchronizedByParameters ? $.i18n.prop("filters_manager_unbind") : $.i18n.prop("filters_manager_bind")) + " </button>";
+
+		if (endpoint != "")
+			html += "<span class='btTitle'>" + "</span><button id='saveButton'>" + $.i18n.prop("menu_item_file_save") + " </button>";
+		else
+			html += "<span class='btTitle'>" + $.i18n.prop("filters_manager_title") + "</span><button id='dashboardBindingButton'>" + (filtersMap.synchronizedByParameters ? $.i18n.prop("filters_manager_unbind") : $.i18n.prop("filters_manager_bind")) + " </button>";
 
 		html += "</div><div id='filterSelectorTitle' class='topBoxRight'>" + $.i18n.prop("filters_manager_tip");
-		
+
 		html += "</div></div><div class='centralBox'><div class='centralBoxLeft'>";
-		
+
 		var hierarchyQualifiedNames = [];
 		for(key in filtersMap.hierarchies) {
 			hierarchyQualifiedNames.push(key);
 		}
 		hierarchyQualifiedNames.sort();
-		
+
 		$.each(hierarchyQualifiedNames, function(i, key) {
 			var hierarchyName = myself.olapCube.getCaption(key);
 			var hierarchy = filtersMap.hierarchies[key];
 			var levels = hierarchy.levels;
-			
+
 			html += "<strong>" + hierarchyName + "</strong><ul>";
-			
+
 			$.each(hierarchy.order, function(i, v) {
 				var levelQualifiedName = v;
 				var levelName = myself.olapCube.getCaption(levelQualifiedName);
@@ -796,17 +987,19 @@ bt.components.BTable = function(spec) {
 				var filterString = "";
 				if(filtered && !isAllMember)
 					filterString = (synchronizedByParameters && filtersMap.synchronizedByParameters)? $.i18n.prop("filters_manager_tag_parameter") : $.i18n.prop("filters_manager_tag_" + filterMode.toLowerCase(), selections.toString().split("SPLIT_TO_CONVERT_STRING_TO_ARRAY"));
-				html += "<li><span class='list-item-level" + (levelQualifiedName == selectedLevel ? " list-item-selected" : "") + "' data-par='" + synchronizedByParameters + "' data-lbl='" + hierarchyName + " -> " + levelName + "' data-qn='" + levelQualifiedName + "'>" + levelName + "</span><span class='list-item-filterInfo'>" + filterString + "</span></li>";				
+					html += "<li><span class='list-item-level" + (levelQualifiedName == selectedLevel ? " list-item-selected" : "") + "' data-par='" + synchronizedByParameters + "' data-lbl='" + hierarchyName + " -> " + levelName + "' data-qn='" + levelQualifiedName + "'>" + levelName + "</span><span class='list-item-filterInfo'>" + filterString + "</span></li>";				
 			});
-			 
+
 			html += "</ul>";
 		});
-		
+
 		html += "</div><div id='filterSelectorStage' class='centralBoxRight'>";
-		
-		
+
+
 		html += "</div></div></div>";
-		
+
+		myself.query.saveInHistory();
+
 		$.fancybox(html, {
 			'autoDimensions': true,
 			'overlayShow': true,
@@ -814,55 +1007,60 @@ bt.components.BTable = function(spec) {
 			'hideOnContentClick': false,
 			'enableEscapeButton': false,
 			'showCloseButton': true,
-			'onClosed' : function() { if(refreshTable) Dashboards.getComponent(myself.properties.componentName).update(); }
+			'onClosed' : function() { if(refreshTable && endpoint == "") {
+				Dashboards.getComponent(myself.properties.componentName).update();
+				} else {
+					myself.query.stepBackHistory();
+				}
+			}
 		});
-		
+
 		var multiselectDefaultProperties = {
-			header: true,
-			minWidth: 480,
-			height: 370,
-			checkAllText: $.i18n.prop("filters_manager_form_selector_check_all"),
-			uncheckAllText: $.i18n.prop("filters_manager_form_selector_uncheck_all"),
-			noneSelectedText: $.i18n.prop("filters_manager_form_selector_placeholder"),
-			selectedText: $.i18n.prop("filters_manager_form_selector_selected_text", ["#", "#"]),
-			//autoOpen: false,
-			//multiple: true,
-			//classes: "",
-			selectedList: 50/*,
+				header: true,
+				minWidth: 480,
+				height: 370,
+				checkAllText: $.i18n.prop("filters_manager_form_selector_check_all"),
+				uncheckAllText: $.i18n.prop("filters_manager_form_selector_uncheck_all"),
+				noneSelectedText: $.i18n.prop("filters_manager_form_selector_placeholder"),
+				selectedText: $.i18n.prop("filters_manager_form_selector_selected_text", ["#", "#"]),
+				//autoOpen: false,
+				//multiple: true,
+				//classes: "",
+				selectedList: 50/*,
 			click: function(e){},
 			optgrouptoggle: function(event, ui){}*/
 		};
 
 		var multiselectBetweenModeProperties = {
-			header: $.i18n.prop("filters_manager_form_selector_between_notice"),
-			minWidth: 480,
-			height: 370,
-			noneSelectedText: $.i18n.prop("filters_manager_form_selector_placeholder"),
-			selectedList: 2,
-			click: function(e){
-		       if( $(this).multiselect("widget").find("input:checked").length > 2 ){
-		           return false;
-		       }
-			},
-			beforeoptgrouptoggle: function(e, ui){
-				return false;
-			}
+				header: $.i18n.prop("filters_manager_form_selector_between_notice"),
+				minWidth: 480,
+				height: 370,
+				noneSelectedText: $.i18n.prop("filters_manager_form_selector_placeholder"),
+				selectedList: 2,
+				click: function(e){
+					if( $(this).multiselect("widget").find("input:checked").length > 2 ){
+						return false;
+					}
+				},
+				beforeoptgrouptoggle: function(e, ui){
+					return false;
+				}
 		};
 
 		var multiselectfilterDefaultProperties = {
-			label: $.i18n.prop("filters_manager_form_selector_filter_label"),
-			placeholder: $.i18n.prop("filters_manager_form_selector_filter_placeholder"),
+				label: $.i18n.prop("filters_manager_form_selector_filter_label"),
+				placeholder: $.i18n.prop("filters_manager_form_selector_filter_placeholder"),
 		};
 
 		var createSelectContent = function(levelQualifiedName, isCalculatedMember, level, boundToDashboard, uniqueNames) {
 			var html = "";
-			
-			var members = isCalculatedMember ? [] : myself.olapCube.getLevelMembers(levelQualifiedName).members;
+
+			var members = isCalculatedMember ? [] : myself.olapCube.getLevelMembers(levelQualifiedName, myself.query.getFilters()).members;
 
 			if(uniqueNames) {
-				
+
 				var previousOptgroup = "";
-				
+
 				$.each(members, function(i, v) {
 					var optgroup = "";
 					var memberQualifiedName	= v.qualifiedName;
@@ -872,14 +1070,14 @@ bt.components.BTable = function(spec) {
 							optgroup += ".[" + qnParts[i] + "]";
 						optgroup = optgroup.substring(1);
 					}
-					
+
 					if(optgroup != "" && optgroup != previousOptgroup) {
 						if(previousOptgroup != "")
 							html += "</optgroup>";
 						html += "<optgroup label='" + optgroup + "'>";
 						previousOptgroup = optgroup;
 					}
-					
+
 					var memberName = v.name;
 					var selectedMembers = [];
 					if(boundToDashboard && level.synchronizedByParameters) {
@@ -893,14 +1091,14 @@ bt.components.BTable = function(spec) {
 					}
 					html += "<option value=\"" + memberQualifiedName + "\"" + ($.inArray(memberQualifiedName, selectedMembers) < 0 ? "" : " selected") + ">" + memberName + "</option>";
 				});
-				
+
 				if(previousOptgroup != "")
 					html += "</optgroup>";
-			
+
 			} else {
-				
+
 				var memberNames = _.uniq($.map(members, function(e){return e.name;}).sort(), true);
-				
+
 				var selectedMembers = [];
 				if(boundToDashboard && level.synchronizedByParameters) {
 					var parameterValue = Dashboards.getParameterValue(level.initialFilterExpression.replace(level.filterMode + ":", ""));
@@ -911,25 +1109,25 @@ bt.components.BTable = function(spec) {
 				} else {
 					selectedMembers = level.members;
 				}
-								
+
 				$.each(memberNames, function(i, memberName) {
 					html += "<option value=\"" + memberName + "\"" + ($.inArray(memberName, selectedMembers) < 0 ? "" : " selected") + ">" + memberName + "</option>";
 				});				
-				
+
 			}
-			
+
 			return html;
 		};
-		
+
 		var generateFilterSelector = function(levelQualifiedName, levelLabel) {	
 			var qnParts = levelQualifiedName.split("].[");
 			var hrcName = qnParts[0].substring(1);
 			var level = qnParts.length > 1 ? filtersMap.hierarchies["[" + hrcName + "]"].levels[levelQualifiedName] : {};
 
 			var uniqueNames = level.uniqueNames;
-			
+
 			var boundToDashboard = filtersMap.synchronizedByParameters;
-			
+
 			var title = "";
 			if(levelLabel)
 				title = levelLabel;
@@ -939,41 +1137,41 @@ bt.components.BTable = function(spec) {
 			}
 
 			$("#filterSelectorTitle").html("<span class='btTitle'>" + title + "</span>");
-			
+
 			var html = "<div class='filterModeBar'>";
 			html += "<div><strong style='font-weight:bold'>" + $.i18n.prop("filters_manager_form_filter_mode") + "</strong> <input type='radio' name='filter-mode' value='in' " + (level.filterMode == "between" ? "" : "checked") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_in");
-			html += "<input type='radio' name='filter-mode' value='between' " + (level.filterMode == "between" ? "checked" : "") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_between");
+			html += "<input type='radio' name='filter-mode' value='between' " + (level.filterMode == "between" ? "checked" : "") + ((boundToDashboard && level.synchronizedByParameters) || (endpoint != "") ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_between");
 			html += "</div><div id='exceptBox'" + (level.filterMode == "between" ? " style='display:none'" : "") + "><strong>" + $.i18n.prop("filters_manager_form_except") + "</strong> <input type='checkbox' name='except' value='except' " + (level.filterMode == "exclude" ? "checked" : "") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>";
 			html += "</div><div><strong style='font-weight:bold'>" + $.i18n.prop("filters_manager_form_unique_names") + "</strong> <input type='radio' name='uniquenames' value='yes' " + (uniqueNames ? "checked" : "") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_unique_names_yes");
 			html += "<input type='radio' name='uniquenames' value='no' " + (uniqueNames ? "" : "checked") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_unique_names_no");
 			html += "</div></div><select id='membersSelect' name='membersSelect' multiple='multiple'>";
 
 			html += createSelectContent(levelQualifiedName, qnParts.length < 2, level, boundToDashboard, uniqueNames);
-			
+
 			html += "</select>";
-			
+
 			html += "<div class='updateFilterBar'><input id='update-filter' type='button' value='" + $.i18n.prop("filters_manager_form_update_filter") + "'" + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + " /></div>";
-			
+
 			$("#filterSelectorStage").html(html);
-			
+
 			var membersSelectObj = $("#membersSelect");
 			membersSelectObj.multiselect(level.filterMode == "between" ? multiselectBetweenModeProperties : multiselectDefaultProperties).multiselectfilter(multiselectfilterDefaultProperties);
-			
+
 			if(uniqueNames) {
 				membersSelectObj.multiselect({
-				   selectedText: function(numChecked, numTotal, checkedItems){
-					  var items = $.map(checkedItems, function(e) {
-						  var parts = e.value.split("].[");
-						  parts = parts.slice(1);
-						  return "[" + parts.join("].[");
-					  });
-				      return numChecked > 50 ? (numChecked + ' of ' + numTotal) : items.join(", ");
-				   }
+					selectedText: function(numChecked, numTotal, checkedItems){
+						var items = $.map(checkedItems, function(e) {
+							var parts = e.value.split("].[");
+							parts = parts.slice(1);
+							return "[" + parts.join("].[");
+						});
+						return numChecked > 50 ? (numChecked + ' of ' + numTotal) : items.join(", ");
+					}
 				});
 			}
-			
+
 			membersSelectObj.multiselect(boundToDashboard && level.synchronizedByParameters ? 'disable' : 'enable');
-			
+
 			$("input:radio[name='filter-mode']").change(function() {
 				if($("input:radio[name='filter-mode']:checked").val() == 'between') {
 					$("#exceptBox").hide();
@@ -995,14 +1193,14 @@ bt.components.BTable = function(spec) {
 				membersSelectObj.multiselect(isBetweenMode ? multiselectBetweenModeProperties : multiselectDefaultProperties).multiselectfilter(multiselectfilterDefaultProperties);
 				if(uniqueNames) {
 					membersSelectObj.multiselect({
-					   selectedText: function(numChecked, numTotal, checkedItems){
-						  var items = $.map(checkedItems, function(e) {
-							  var parts = e.value.split("].[");
-							  parts = parts.slice(1);
-							  return "[" + parts.join("].[");
-						  });
-					      return numChecked > 50 ? $.i18n.prop("filters_manager_form_selector_selected_text", [numChecked.toString(), numTotal.toString()]) : items.join(", ");
-					   }
+						selectedText: function(numChecked, numTotal, checkedItems){
+							var items = $.map(checkedItems, function(e) {
+								var parts = e.value.split("].[");
+								parts = parts.slice(1);
+								return "[" + parts.join("].[");
+							});
+							return numChecked > 50 ? $.i18n.prop("filters_manager_form_selector_selected_text", [numChecked.toString(), numTotal.toString()]) : items.join(", ");
+						}
 					});
 				}
 			});
@@ -1014,12 +1212,12 @@ bt.components.BTable = function(spec) {
 				var members = membersSelectObj.val(); // null if no selection
 
 				var filterString = "";
-				
+
 				var filterMode = mode == "in" ? (except ? "exclude" : "include") : mode;
 				level.filterMode = filterMode;
-				
+
 				level.uniqueNames = uniqueNames == "yes";
-				
+
 				if(members == null) {
 					level.members = [];
 					level.filtered = false;
@@ -1030,20 +1228,20 @@ bt.components.BTable = function(spec) {
 					level.filtered = true;
 					filterString = $.i18n.prop("filters_manager_tag_" + filterMode.toLowerCase(), members.length.toString().split("SPLIT_TO_CONVERT_STRING_TO_ARRAY"));
 				}
-								
+
 				$(".list-item-level[data-qn='" + levelQualifiedName + "']").closest("li").find(".list-item-filterInfo").text(filterString);
 
 				myself.query.setFiltersMap("[" + hrcName + "]", levelQualifiedName, level);	
-				
+
 				refreshTable = true;
 			});
 		};
 
-		
+
 		if(selectedLevel != "") {
 			generateFilterSelector(selectedLevel);
 		}
-		
+
 		$(".list-item-level").bind("click", function() {
 			$(".list-item-selected").removeClass("list-item-selected");
 			$(this).addClass("list-item-selected");
@@ -1051,56 +1249,56 @@ bt.components.BTable = function(spec) {
 			var levelQualifiedName = $(this).data("qn");
 			generateFilterSelector(levelQualifiedName, levelLabel);
 		});
-		
+
 		$("#dashboardBindingButton").bind("click", function() {
 			var bound = !filtersMap.synchronizedByParameters;
 			filtersMap.synchronizedByParameters = bound;
 			myself.query.synchronizeFiltersWithParameters(bound);
-			
+
 			$(".list-item-level").each(function() {
 				if($(this).data("par")) {
 					var lvlQn = $(this).data("qn");
 					var hrcQn = lvlQn.split("].[")[0] + "]";
 					var level = filtersMap.hierarchies[hrcQn].levels[lvlQn];
 					var initialFilterExpression = level.initialFilterExpression;
-					
+
 					var filterInfoObj = $(this).closest("li").find(".list-item-filterInfo");
-					
+
 					var isSelected = $(this).hasClass("list-item-selected");
-					
+
 					if(bound) {
 						var filterMode = initialFilterExpression.split(":")[0];
 						var uniqueNames = filterMode.indexOf("_un") > -1;
 						filterMode = filterMode.replace("_un", "");
-						
+
 						if(isSelected) {
 							$("input:radio[name='filter-mode'][value='" + (filterMode != "between" ? "in" : filterMode) + "']").attr('checked', true);
 							$("input:checkbox[name='except']").attr('checked', filterMode == "exclude");
 							if(filterMode == "between") $("#exceptBox").hide(); else $("#exceptBox").show();
 							$("input:radio[name='uniquenames'][value='" + (uniqueNames ? "yes" : "no") + "']").attr('checked', true);
-							
+
 							var membersSelectObj = $("#membersSelect");
 							membersSelectObj.multiselect("uncheckAll").multiselectfilter("destroy").multiselect("destroy");
-							
+
 							membersSelectObj.empty().html(createSelectContent(lvlQn, lvlQn.indexOf("].[") < 0, level, true, uniqueNames));
 							membersSelectObj.multiselect(filterMode == "between" ? multiselectBetweenModeProperties : multiselectDefaultProperties).multiselectfilter(multiselectfilterDefaultProperties);
-							
+
 							if(uniqueNames) {
 								membersSelectObj.multiselect({
-								   selectedText: function(numChecked, numTotal, checkedItems){
-									  var items = $.map(checkedItems, function(e) {
-										  var parts = e.value.split("].[");
-										  parts = parts.slice(1);
-										  return "[" + parts.join("].[");
-									  });
-								      return numChecked > 50 ? $.i18n.prop("filters_manager_form_selector_selected_text", [numChecked.toString(), numTotal.toString()]) : items.join(", ");
-								   }
+									selectedText: function(numChecked, numTotal, checkedItems){
+										var items = $.map(checkedItems, function(e) {
+											var parts = e.value.split("].[");
+											parts = parts.slice(1);
+											return "[" + parts.join("].[");
+										});
+										return numChecked > 50 ? $.i18n.prop("filters_manager_form_selector_selected_text", [numChecked.toString(), numTotal.toString()]) : items.join(", ");
+									}
 								});
 							}
 						}
-						
+
 						myself.query.setFiltersMap(hrcQn, lvlQn, {filterMode: filterMode, uniqueNames: uniqueNames, members: [], filtered: true});
-						
+
 						filterInfoObj.text($.i18n.prop("filters_manager_tag_parameter"));
 					}
 					else {
@@ -1111,17 +1309,17 @@ bt.components.BTable = function(spec) {
 							selectedMembers = parameterValue;
 						else
 							parameterValue == "" ? [] : selectedMembers.push(parameterValue);
-						
-						myself.query.setFiltersMap(hrcQn, lvlQn, {members: selectedMembers});
-						
-						var firstMember = selectedMembers.length > 0 ? selectedMembers[0] : "All";
-						var isAllMember = firstMember == "All" || firstMember.indexOf("All ") == 0 || firstMember.indexOf(".[All]") > 0 || firstMember.indexOf(".[All ") > 0; 
-						if(isAllMember)
-							filterInfoObj.text("");
-						else
-							filterInfoObj.text($.i18n.prop("filters_manager_tag_" + filterMode.toLowerCase(), selectedMembers.length.toString().split("SPLIT_TO_CONVERT_STRING_TO_ARRAY")));
+
+							myself.query.setFiltersMap(hrcQn, lvlQn, {members: selectedMembers});
+
+							var firstMember = selectedMembers.length > 0 ? selectedMembers[0] : "All";
+							var isAllMember = firstMember == "All" || firstMember.indexOf("All ") == 0 || firstMember.indexOf(".[All]") > 0 || firstMember.indexOf(".[All ") > 0; 
+							if(isAllMember)
+								filterInfoObj.text("");
+							else
+								filterInfoObj.text($.i18n.prop("filters_manager_tag_" + filterMode.toLowerCase(), selectedMembers.length.toString().split("SPLIT_TO_CONVERT_STRING_TO_ARRAY")));
 					}
-					
+
 					if(isSelected) {
 						$("input:radio[name='filter-mode']").prop("disabled", bound);
 						$("input:checkbox[name='except']").prop("disabled", bound);
@@ -1131,21 +1329,38 @@ bt.components.BTable = function(spec) {
 					}
 				}
 			});
-			
+
 			$(this).text(bound ? $.i18n.prop("filters_manager_unbind") : $.i18n.prop("filters_manager_bind"));
 
 			//if(bound) 
-    			refreshTable = true;
+			refreshTable = true;
 		});
-		
+
+		$("#saveButton").bind("click", function() {
+			var _opts = {
+					params: {
+						properties: encodeURIComponent(JSON.stringify(myself.properties)) // Put here your params.
+					}
+			}
+			var eOpts = $.extend( {}, opts, _opts);
+			opts.params["cube"] = myself.query.getCube();
+			opts.params["properties"] = JSON.stringify(myself.query.getFilters());
+			//opts.params.push("{properties: encodeURIComponent(JSON.stringify(myself.properties)));
+			runEndpoint(
+					pluginId, // Plugin identifier.
+					endpoint, // Put your endpoint name here!
+					opts
+			); 
+		});
+
 	};
-	
-	
+
+
 	/* Start ContextMenu Functions */
-	
+
 	myself.getPositionInHierarchyInAxis = function(newQualifiedName, axisQualifiedNames) {
 		var position = {};
-		
+
 		var levels = myself.olapCube.getHierarchyLevels(newQualifiedName.split("].[")[0] + "]");
 		levels = $.map(levels, function(e, i) {
 			return e.qualifiedName;
@@ -1155,10 +1370,10 @@ bt.components.BTable = function(spec) {
 		});
 
 		var index = $.inArray(newQualifiedName, levels);
-		
+
 		position.level = index == 0 ? levels[index + 1] : levels[index - 1];
 		position.direction = index == 0 ? -1 : 1;
-		
+
 		return position;
 	};
 
@@ -1174,29 +1389,39 @@ bt.components.BTable = function(spec) {
 
 		extremeLevels.push(levels[0]);
 		extremeLevels.push(levels[levels.length - 1]);
-		
+
 		return extremeLevels;
 	};
 
- 	myself.buildHeaderContextMenu = function(target) {
-	  	var hasMoC = myself.query.hasMeasuresOnColumns();
-	  	
-	  	var targetLevel = target.level;
-	  	var targetMember = target.member;
-	  	var targetCaption = target.caption;
-	  	
-	  	var targetHierarchy = targetLevel.split("].[")[0].substring(1);
-	  	
-	  	var qualifiedName = targetLevel;
-	  	if(targetLevel.indexOf("].[") < 0)
-	  		qualifiedName += ".[" + targetMember + "]";
-	  	var targetType = myself.getElementType(qualifiedName);
+	myself.buildHeaderContextMenu = function(target) {
+		var hasMoC = myself.query.hasMeasuresOnColumns();
+
+		var targetLevel = target.level;
+		var targetMember = target.member;
+		var targetCaption = target.caption;
+		var targetMeasureIdx = target.measureIdx;
+
+		var targetHierarchy = targetLevel.split("].[")[0].substring(1);
+
+		var qualifiedName = targetLevel;
+		if(targetLevel.indexOf("].[") < 0)
+			qualifiedName += ".[" + targetMember + "]";
+		var targetType = myself.getElementType(qualifiedName);
 
 		var menu = {};
-		
+
 		menu.title = {name: "<strong>" + myself.getMenuTitle(target) + "</strong>", callback: function(key, options) {}};
+		menu.template={
+				name: "<i>" + $.i18n.prop("menu_item_template") +  myself.properties.template.substring(myself.properties.template.lastIndexOf("/")+1, myself.properties.template.lastIndexOf(".bttemplate"))+ "</i>",
+				callback: function(key, options) {
+					myself.loadTemplate();
+					//window.location.reload();
+					//Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "template"
+		};
 		menu.titlesep = "---";
-		
+
 		if(targetType == "DIMENSION" || targetType == "PIVOT_DIMENSION") {							
 			var allLevels = myself.olapCube.getLevels();
 			var queryDimensionLevels = myself.query.getDimensionQualifiedNames();
@@ -1212,7 +1437,7 @@ bt.components.BTable = function(spec) {
 			var invalidHierachies = _.uniq($.map(otherAxisLevels, function(e, i) {
 				return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 			}));
-			
+
 			//console.log(invalidHierachies);
 
 			newLevels = $.grep(newLevels, function(e, i) {
@@ -1227,10 +1452,10 @@ bt.components.BTable = function(spec) {
 				var h = qnParts[0].substring(1);
 				var l = qnParts[1].substring(0, qnParts[1].length-1);
 				var d = e.depth;
-				
+
 				return {hierarchy: h, level: l, qualifiedName: qn, depth: d};
 			});
-						
+
 			var hierarchies = $.map(newLevelsAsObjects, function(e, i) {
 				return e.hierarchy;
 			});
@@ -1245,7 +1470,7 @@ bt.components.BTable = function(spec) {
 					comparison = 1;
 				return comparison;
 			});
-			
+
 			//console.log(hierarchies);
 
 			var menuMatrix = [];
@@ -1265,93 +1490,106 @@ bt.components.BTable = function(spec) {
 			var axisHierarchies = $.map(axisLevels, function(e, i) {
 				return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 			});
-			
+
 			//console.log(axisHierarchies);
 
 			// to find the position where adding a new element after or before an existing one
 			// which is not the only level of its hierarchy to be showed
 			var extremeHierarchyLevels = myself.getExtremeLevelsInHierarchyInAxis(targetLevel, axisLevels);
-			
-			//console.log(extremeHierarchyLevels);
 
-			menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newLevelsAsObjects.length == 0};
-			menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newLevelsAsObjects.length == 0};
+			//console.log(extremeHierarchyLevels);
+			menu.back = {
+					name: $.i18n.prop("menu_item_back"),
+					disabled: !myself.query.hasHistory(),
+					callback: function(key, options) {
+						myself.query.restoreFromHistory();
+						Dashboards.getComponent(myself.properties.componentName).update();
+					},
+					icon: "back"
+			};
+			menu.backSep = "---";
+			menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newLevelsAsObjects.length == 0,icon: "add"};
+			menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newLevelsAsObjects.length == 0,icon: "change"};
 			menu.remove = {
-				name: $.i18n.prop("menu_item_remove"),
-				disabled: !myself.query.isRemovable(targetLevel, targetType.substring(0,1)),
-				callback: function(key, options) {
-					myself.query.remove(targetLevel, targetType.substring(0,1));
-					Dashboards.getComponent(myself.properties.componentName).update();
-				}
+					name: $.i18n.prop("menu_item_remove"),
+					disabled: !myself.query.isRemovable(targetLevel, targetType.substring(0,1)),
+					callback: function(key, options) {
+						myself.query.saveInHistory();
+						myself.query.remove(targetLevel, targetType.substring(0,1), -1);
+						Dashboards.getComponent(myself.properties.componentName).update();
+					},
+					icon: "delete"
 			};
 			menu.filter = {
-				name: $.i18n.prop("menu_item_filter"), 
-				callback: function(key, options) {
-					myself.openFiltersSelectorPanel(targetLevel);
-				}
+					name: $.i18n.prop("menu_item_filter"), 
+					callback: function(key, options) {
+						myself.openFiltersSelectorPanel(targetLevel, "", "", "");
+					},
+					icon: "filter"
 			};
-			
+
 			var axisLetter = targetType == "DIMENSION" ? "D" : "M";
 			var sortDirection = myself.query.getSortDirection(axisLetter, targetLevel);
 			menu.sort = {
-				name: $.i18n.prop("menu_item_sort"), 
-				items: {
-					asc: {
-						name: $.i18n.prop("menu_item_sort_ascending"),
-						items: {
-							kasc: {
-								name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-								disabled: sortDirection == "ASC",
-								callback: function(key, options) {
-									myself.query.sort(axisLetter, targetLevel, "ASC");
-									Dashboards.getComponent(myself.properties.componentName).update();
+					name: $.i18n.prop("menu_item_sort"), 
+					items: {
+						asc: {
+							name: $.i18n.prop("menu_item_sort_ascending"),
+							items: {
+								kasc: {
+									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+									disabled: sortDirection == "ASC",
+									callback: function(key, options) {
+										myself.query.sort(axisLetter, targetLevel, "ASC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								},
+								basc: {
+									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+									disabled: sortDirection == "BASC",
+									callback: function(key, options) {
+										myself.query.sort(axisLetter, targetLevel, "BASC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
 								}
-							},
-							basc: {
-								name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-								disabled: sortDirection == "BASC",
-								callback: function(key, options) {
-									myself.query.sort(axisLetter, targetLevel, "BASC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
+							}
+						},
+						desc: {
+							name: $.i18n.prop("menu_item_sort_descending"),
+							items: {
+								kdesc: {
+									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+									disabled: sortDirection == "DESC",
+									callback: function(key, options) {
+										myself.query.sort(axisLetter, targetLevel, "DESC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								},
+								bdesc: {
+									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+									disabled: sortDirection == "BDESC",
+									callback: function(key, options) {
+										myself.query.sort(axisLetter, targetLevel, "BDESC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								}							
+							}
+						},
+						clear: {
+							name: $.i18n.prop("menu_item_sort_clear"),
+							disabled: sortDirection == "",
+							callback: function(key, options) {
+								myself.query.sort(axisLetter, "", "");
+								Dashboards.getComponent(myself.properties.componentName).update();
 							}
 						}
 					},
-					desc: {
-						name: $.i18n.prop("menu_item_sort_descending"),
-						items: {
-							kdesc: {
-								name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-								disabled: sortDirection == "DESC",
-								callback: function(key, options) {
-									myself.query.sort(axisLetter, targetLevel, "DESC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
-							},
-							bdesc: {
-								name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-								disabled: sortDirection == "BDESC",
-								callback: function(key, options) {
-									myself.query.sort(axisLetter, targetLevel, "BDESC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
-							}							
-						}
-					},
-					clear: {
-						name: $.i18n.prop("menu_item_sort_clear"),
-						disabled: sortDirection == "",
-						callback: function(key, options) {
-							myself.query.sort(axisLetter, "", "");
-							Dashboards.getComponent(myself.properties.componentName).update();
-						}
-					}
-				}
+					icon: "sort"
 			};
-			
+
 			$.each(hierarchies, function(i, hierarchy) {
 				var hierarchyCaption = myself.olapCube.getCaption("[" + hierarchy + "]");
-			
+
 				menu.add.items["add-dim-" + i] = {};
 				menu.add.items["add-dim-" + i].name = hierarchyCaption;
 				menu.add.items["add-dim-" + i].items = {};
@@ -1362,45 +1600,50 @@ bt.components.BTable = function(spec) {
 				var levels = menuMatrix[hierarchy];
 				if(levels.length == 1 && myself.olapCube.getCaption(levels[0].qualifiedName) == hierarchyCaption && levels[0].depth == 1) {
 					var newLevel = levels[0].qualifiedName;
-					
+
 					if($.inArray(hierarchy, axisHierarchies) > -1) {
 						// to find the hierarchy level after which add the new level
 						var position = myself.getPositionInHierarchyInAxis(newLevel, axisLevels);
 
 						menu.add.items["add-dim-" + i].callback = function(key, options) {
-							myself.query.add(newLevel, position.level, position.direction, targetType.substring(0,1));
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, position.level, position.direction, targetType.substring(0,1), -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
-						
+
 						// If the new element belongs to a hierarchy already existing in the axis,
 						// you need to remove targetLevel and place the new element in the right position
 						// that can be different from removed element position
 						menu.change.items["change-dim-" + i].disabled = !myself.query.isReplaceable(newLevel, targetLevel, targetType.substring(0,1));
 						menu.change.items["change-dim-" + i].callback = function(key, options) {
-							myself.query.replace(newLevel, targetLevel, position, targetType.substring(0,1));
+							myself.query.saveInHistory();
+							myself.query.replace(newLevel, targetLevel, position, targetType.substring(0,1), -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 					} else {						
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-before"] = {};
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-before"].name = $.i18n.prop("menu_item_add_before");
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-before"].callback = function(key, options) {							
-							myself.query.add(newLevel, extremeHierarchyLevels[0], -1, targetType.substring(0,1));
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, extremeHierarchyLevels[0], -1, targetType.substring(0,1), -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-after"] = {};
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-after"].name = $.i18n.prop("menu_item_add_after");
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-after"].callback = function(key, options) {
-							myself.query.add(newLevel, extremeHierarchyLevels[1], 1, targetType.substring(0,1));
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, extremeHierarchyLevels[1], 1, targetType.substring(0,1), -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
-						
+
 						menu.change.items["change-dim-" + i].disabled = !myself.query.isReplaceable(newLevel, targetLevel, targetType.substring(0,1));
 						menu.change.items["change-dim-" + i].callback = function(key, options) {
-							myself.query.replace(newLevel, targetLevel, {level: extremeHierarchyLevels[1], direction: 1}, targetType.substring(0,1));
+							myself.query.replace(newLevel, targetLevel, {level: extremeHierarchyLevels[1], direction: 1}, targetType.substring(0,1), -1);
+							myself.query.saveInHistory();
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};						
 					}
-					
+
 					if(targetHierarchy != hierarchy && $.inArray(targetLevel, extremeHierarchyLevels) < 0)
 						menu.change.items["change-dim-" + i].disabled = true;
 				} else {
@@ -1413,50 +1656,55 @@ bt.components.BTable = function(spec) {
 
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j] = {};
 						menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].name = newLevelCaption;
-						
+
 						menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j] = {};
 						menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j].name = newLevelCaption;						
-						
+
 						if($.inArray(hierarchy, axisHierarchies) > -1) {
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].callback = function(key, options) {								
-								myself.query.add(newLevel, position.level, position.direction, targetType.substring(0,1));
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, position.level, position.direction, targetType.substring(0,1), -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
-							
+
 							menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j].disabled = !myself.query.isReplaceable(newLevel, targetLevel, targetType.substring(0,1));
 							menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j].callback = function(key, options) {
-								myself.query.replace(newLevel, targetLevel, position, targetType.substring(0,1));
+								myself.query.saveInHistory();
+								myself.query.replace(newLevel, targetLevel, position, targetType.substring(0,1), -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 						} else {							
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items = {};
-							
+
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-before"] = {};
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-before"].name = $.i18n.prop("menu_item_add_before");
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-before"].callback = function(key, options) {
-								myself.query.add(newLevel, extremeHierarchyLevels[0], -1, targetType.substring(0,1));
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, extremeHierarchyLevels[0], -1, targetType.substring(0,1), -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-after"] = {};
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-after"].name = $.i18n.prop("menu_item_add_after");
 							menu.add.items["add-dim-" + i].items["add-dim-" + i + "-" + j].items["add-dim-" + i + "-" + j + "-after"].callback = function(key, options) {
-								myself.query.add(newLevel, extremeHierarchyLevels[1], 1, targetType.substring(0,1));
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, extremeHierarchyLevels[1], 1, targetType.substring(0,1), -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
-							
+
 							menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j].disabled = !myself.query.isReplaceable(newLevel, targetLevel, targetType.substring(0,1));
 							menu.change.items["change-dim-" + i].items["change-dim-" + i + "-" + j].callback = function(key, options) {
-								myself.query.replace(newLevel, targetLevel, {level: extremeHierarchyLevels[1], direction: 1}, targetType.substring(0,1));
+								myself.query.saveInHistory();
+								myself.query.replace(newLevel, targetLevel, {level: extremeHierarchyLevels[1], direction: 1}, targetType.substring(0,1), -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};							
 						}
-						
+
 						if(targetHierarchy != hierarchy && $.inArray(targetLevel, extremeHierarchyLevels) < 0)
 							menu.change.items["change-dim-" + i].disabled = true;
 					});
 				}				
 			});
-			
+
 			var countEnabled = 0;
 			if(menu.change.hasOwnProperty("items")) {
 				for(key in menu.change.items) {
@@ -1471,24 +1719,35 @@ bt.components.BTable = function(spec) {
 			if(targetType == "DIMENSION" && !hasMoC && target.hasOwnProperty("index")) {
 				var items = myself.buildDrillMenu();
 				var disabled = $.isEmptyObject(items) ? true : false;
-				
+
 				menu.drillsep = "---";
 				menu.drill = {
-					name: $.i18n.prop("menu_item_drill_column"),
-					items: items,
-					disabled: disabled
+						name: $.i18n.prop("menu_item_drill_column"),
+						items: items,
+						disabled: disabled,
+						icon: "drill"
 				};
 			}
 		}
-		
+
 		else if(targetType == "MEASURE" || targetType == "MEASURES_LEVEL") {
 			if(targetType == "MEASURE") {				
+				// No Pivot Dimensions ==> First Dimension Column Has Index=0 
+				// Pivot Dimensions ==> First Measures Column Has Index=0
+				//var measureIdx = myself.query.getPivotDimensions().length == 0 ? ((target.index - myself.query.getDimensions().length + 1) % myself.getMeasures().length) + 1 : ((target.index + 1) % myself.getMeasures().length) + 1;
+				var pivotCnt = myself.query.getPivotDimensions().length;
+				var dimCnt = myself.query.getDimensions().length;
+				var measureIdx = myself.query.getPivotDimensions().length == 0 ? ((target.index - myself.query.getDimensions().length) % myself.getMeasures().length) + 1 : (target.index % myself.getMeasures().length) + 1;
+
 				var allMeasures = myself.olapCube.getStructure().measures;
 				var queryMeasures = myself.query.getMeasureQualifiedNames();
+				/* 
 				var newMeasures = $.grep(allMeasures, function(e, i) {
 					return queryMeasures.indexOf(e.qualifiedName) < 0;
 				});
-								
+				 */
+				var newMeasures = jQuery.extend([], allMeasures);
+
 				newMeasures.sort(function(a, b) {
 					var comparison = 0;
 					if(a.caption < b.caption)
@@ -1497,19 +1756,31 @@ bt.components.BTable = function(spec) {
 						comparison = 1;
 					return comparison;
 				});
-				
-				
-				menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newMeasures.length == 0};
-				menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newMeasures.length == 0};
+
+
+				menu.back = {
+						name: $.i18n.prop("menu_item_back"),
+						disabled: !myself.query.hasHistory(),
+						callback: function(key, options) {
+							myself.query.restoreFromHistory();
+							Dashboards.getComponent(myself.properties.componentName).update();
+						},
+						icon: "back"
+				};
+				menu.backSep = "---";
+				menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newMeasures.length == 0, icon: "add"};
+				menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newMeasures.length == 0, icon: "change"};
 				menu.remove = {
-					name: $.i18n.prop("menu_item_remove"),
-					disabled: queryMeasures.length == 1,
-					callback: function(key, options) {
-						myself.query.remove(targetLevel, targetType.substring(0,1));
-						Dashboards.getComponent(myself.properties.componentName).update();
-					}
+						name: $.i18n.prop("menu_item_remove"),
+						disabled: queryMeasures.length == 1,
+						callback: function(key, options) {
+							myself.query.saveInHistory();
+							myself.query.remove(targetLevel, targetType.substring(0,1), targetMeasureIdx);
+							Dashboards.getComponent(myself.properties.componentName).update();
+						},
+						icon: "delete"
 				};				
-				
+
 				$.each(newMeasures, function(i, v) {
 					menu.add.items["add-kpi-" + i] = {};
 					menu.add.items["add-kpi-" + i].name = v.caption;
@@ -1517,84 +1788,88 @@ bt.components.BTable = function(spec) {
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"] = {};
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"].name = $.i18n.prop("menu_item_add_before");
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"].callback = function(key, options) {
-						myself.query.add(v.qualifiedName, targetLevel, -1, targetType.substring(0,1));
+						myself.query.saveInHistory();
+						myself.query.add(v.qualifiedName, targetLevel, -1, targetType.substring(0,1), targetMeasureIdx);
 						Dashboards.getComponent(myself.properties.componentName).update();
 					};
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"] = {};
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"].name = $.i18n.prop("menu_item_add_after");
 					menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"].callback = function(key, options) {
-						myself.query.add(v.qualifiedName, targetLevel, 1, targetType.substring(0,1));
+						myself.query.saveInHistory();
+						myself.query.add(v.qualifiedName, targetLevel, 1, targetType.substring(0,1), targetMeasureIdx);
 						Dashboards.getComponent(myself.properties.componentName).update();
 					};
-					
+
 					menu.change.items["change-kpi-" + i] = {};
 					menu.change.items["change-kpi-" + i].name = v.caption;
 					menu.change.items["change-kpi-" + i].callback = function(key, options) {
-						myself.query.replace(v.qualifiedName, targetLevel, null, targetType.substring(0,1));
+						myself.query.saveInHistory();
+						myself.query.replace(v.qualifiedName, targetLevel, null, targetType.substring(0,1), targetMeasureIdx);
 						Dashboards.getComponent(myself.properties.componentName).update();
 					};
 				});
-				
+
 				var sortDirection = myself.query.getSortDirection("D", targetLevel);
 				menu.sort = {
-					name: $.i18n.prop("menu_item_sort"), 
-					items: {
-						asc: {
-							name: $.i18n.prop("menu_item_sort_ascending"),
-							items: {
-								kasc: {
-									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-									disabled: sortDirection == "ASC",
-									callback: function(key, options) {
-										myself.query.sort("D", targetLevel, "ASC");
-										Dashboards.getComponent(myself.properties.componentName).update();
+						name: $.i18n.prop("menu_item_sort"), 
+						items: {
+							asc: {
+								name: $.i18n.prop("menu_item_sort_ascending"),
+								items: {
+									kasc: {
+										name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+										disabled: sortDirection == "ASC",
+										callback: function(key, options) {
+											myself.query.sort("D", targetLevel, "ASC");
+											Dashboards.getComponent(myself.properties.componentName).update();
+										}
+									},
+									basc: {
+										name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+										disabled: sortDirection == "BASC",
+										callback: function(key, options) {
+											myself.query.sort("D", targetLevel, "BASC");
+											Dashboards.getComponent(myself.properties.componentName).update();
+										}
 									}
-								},
-								basc: {
-									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-									disabled: sortDirection == "BASC",
-									callback: function(key, options) {
-										myself.query.sort("D", targetLevel, "BASC");
-										Dashboards.getComponent(myself.properties.componentName).update();
-									}
+								}
+							},
+							desc: {
+								name: $.i18n.prop("menu_item_sort_descending"),
+								items: {
+									kdesc: {
+										name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+										disabled: sortDirection == "DESC",
+										callback: function(key, options) {
+											myself.query.sort("D", targetLevel, "DESC");
+											Dashboards.getComponent(myself.properties.componentName).update();
+										}
+									},
+									bdesc: {
+										name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+										disabled: sortDirection == "BDESC",
+										callback: function(key, options) {
+											myself.query.sort("D", targetLevel, "BDESC");
+											Dashboards.getComponent(myself.properties.componentName).update();
+										}
+									}							
+								}
+							},
+							clear: {
+								name: $.i18n.prop("menu_item_sort_clear"),
+								disabled: sortDirection == "",
+								callback: function(key, options) {
+									myself.query.sort("D", "", "");
+									Dashboards.getComponent(myself.properties.componentName).update();
 								}
 							}
 						},
-						desc: {
-							name: $.i18n.prop("menu_item_sort_descending"),
-							items: {
-								kdesc: {
-									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-									disabled: sortDirection == "DESC",
-									callback: function(key, options) {
-										myself.query.sort("D", targetLevel, "DESC");
-										Dashboards.getComponent(myself.properties.componentName).update();
-									}
-								},
-								bdesc: {
-									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-									disabled: sortDirection == "BDESC",
-									callback: function(key, options) {
-										myself.query.sort("D", targetLevel, "BDESC");
-										Dashboards.getComponent(myself.properties.componentName).update();
-									}
-								}							
-							}
-						},
-						clear: {
-							name: $.i18n.prop("menu_item_sort_clear"),
-							disabled: sortDirection == "",
-							callback: function(key, options) {
-								myself.query.sort("D", "", "");
-								Dashboards.getComponent(myself.properties.componentName).update();
-							}
-						}
-					}
+						icon: "sort"
 				};
 			}
-			
-			menu.pivot = {name: $.i18n.prop("menu_item_pivot"), items: {}};			
-			
+
+			menu.pivot = {name: $.i18n.prop("menu_item_pivot"), items: {}, icon: "pivot"};			
+
 			var allLevels = myself.olapCube.getLevels();
 			var queryDimensionLevels = myself.query.getDimensionQualifiedNames();
 			var queryPivotLevels = myself.query.getPivotDimensionQualifiedNames();
@@ -1605,25 +1880,25 @@ bt.components.BTable = function(spec) {
 			var invalidHierachies = _.uniq($.map(queryDimensionLevels, function(e, i) {
 				return e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1);
 			}));
-			
+
 			//console.log(invalidHierachies);
-			
+
 			newLevels = $.grep(newLevels, function(e, i) {
 				return $.inArray(e.qualifiedName.split("].[")[0].substring(1), invalidHierachies) < 0;
 			});
-			
+
 			//console.log(newLevels);			
-			
+
 			var newLevelsAsObjects = $.map(newLevels, function(e, i) {
 				var qn = e.qualifiedName;
 				var qnParts = qn.split("].[");
 				var h = qnParts[0].substring(1);
 				var l = qnParts[1].substring(0, qnParts[1].length-1);
 				var d = e.depth;
-				
+
 				return {hierarchy: h, level: l, qualifiedName: qn, depth: d};
 			});
-						
+
 			var hierarchies = $.map(newLevelsAsObjects, function(e, i) {
 				return e.hierarchy;
 			});
@@ -1638,9 +1913,9 @@ bt.components.BTable = function(spec) {
 					comparison = 1;
 				return comparison;
 			});
-			
+
 			//console.log(hierarchies);
-			
+
 			var menuMatrix = [];
 			$.each(newLevelsAsObjects, function(i, v) {
 				var h = v.hierarchy;
@@ -1651,19 +1926,19 @@ bt.components.BTable = function(spec) {
 					menuMatrix[h] = [];
 				menuMatrix[h].push({name: l, qualifiedName: qn, depth: d});
 			});
-			
+
 			//console.log(menuMatrix);
 
 			var axisLevels = myself.query.getPivotDimensionQualifiedNames();	
 			var axisHierarchies = $.map(axisLevels, function(e, i) {
 				return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 			});
-			
+
 			//console.log(axisHierarchies);
-			
+
 			$.each(hierarchies, function(i, hierarchy) {
 				var hierarchyCaption = myself.olapCube.getCaption("[" + hierarchy + "]");
-				
+
 				menu.pivot.items["add-pivot-" + i] = {};
 				menu.pivot.items["add-pivot-" + i].name = hierarchyCaption;
 				menu.pivot.items["add-pivot-" + i].items = {};
@@ -1671,24 +1946,27 @@ bt.components.BTable = function(spec) {
 				var levels = menuMatrix[hierarchy];
 				if(levels.length == 1 && myself.olapCube.getCaption(levels[0].qualifiedName) == hierarchyCaption && levels[0].depth == 1) {
 					var newLevel = levels[0].qualifiedName;
-					
+
 					if($.inArray(hierarchy, axisHierarchies) > -1) {
 						menu.pivot.items["add-pivot-" + i].callback = function(key, options) {
 							var position = myself.getPositionInHierarchyInAxis(newLevel, axisLevels);
-							myself.query.add(newLevel, position.level, position.direction, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, position.level, position.direction, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 					} else {
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"].name = $.i18n.prop("menu_item_add_before");
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"].callback = function(key, options) {
-							myself.query.add(newLevel, "MEASURES", -1, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, "MEASURES", -1, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"].name = $.i18n.prop("menu_item_add_after");
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"].callback = function(key, options) {
-							myself.query.add(newLevel, "MEASURES", 1, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, "MEASURES", 1, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 					}					
@@ -1696,29 +1974,32 @@ bt.components.BTable = function(spec) {
 					$.each(levels, function(j, level) {
 						var newLevel = level.qualifiedName;
 						var newLevelCaption = myself.olapCube.getCaption(newLevel);
-						
+
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].name = newLevelCaption;
 						if($.inArray(hierarchy, axisHierarchies) > -1) {
 							var position = myself.getPositionInHierarchyInAxis(newLevel, axisLevels);
 
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].callback = function(key, options) {
-								myself.query.add(newLevel, position.level, position.direction, "P");
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, position.level, position.direction, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 						} else {
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items = {};
-							
+
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"] = {};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"].name = $.i18n.prop("menu_item_add_before");
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"].callback = function(key, options) {
-								myself.query.add(newLevel, "MEASURES", -1, "P");
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, "MEASURES", -1, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"] = {};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"].name = $.i18n.prop("menu_item_add_after");
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"].callback = function(key, options) {
-								myself.query.add(newLevel, "MEASURES", 1, "P");
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, "MEASURES", 1, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 						}												
@@ -1727,74 +2008,88 @@ bt.components.BTable = function(spec) {
 			});
 
 		}
-		
+
 		// else if CALCULATED_MEMBER { ... }
-		
+
 		menu.filterssep = "---";
 		menu.filters = {
-			name: $.i18n.prop("menu_item_filters_manager"),
-			callback: function(key, options) {
-				myself.openFiltersSelectorPanel("");
-			}
+				name: $.i18n.prop("menu_item_filters_manager"),
+				callback: function(key, options) {
+					myself.openFiltersSelectorPanel("", "", "", "");
+				},
+				icon: "filter"
 		};
 
-        menu.toggleFilters = {
-            name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
-            callback: function() {
-            	myself.properties.showFilters = !myself.properties.showFilters;
-            	$("#" + myself.properties.filtersPanelHtmlObject).toggle();
-            }
-        };		
+		menu.toggleFilters = {
+				name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
+						callback: function() {
+							myself.properties.showFilters = !myself.properties.showFilters;
+							$("#" + myself.properties.filtersPanelHtmlObject).toggle();
+						},
+						icon: "filterHide"
+		};		
+
+		menu.toggleToolbar = {
+				name: myself.properties.showToolbar ? $.i18n.prop("menu_item_hide_toolbar") : $.i18n.prop("menu_item_show_toolbar"), 
+						callback: function() {
+							myself.properties.showToolbar = !myself.properties.showToolbar;
+							$("#" + myself.properties.toolbarPanelHtmlObject).toggle();
+						},
+						icon: "toolbarHide"
+		};		
 
 		menu.settingssep = "---";
 		var settingsMenu = myself.buildSettingsMenu();
-		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items};
-		
+		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items, icon: "tableOptions"};
+
 		menu.mdx = {
-			name: $.i18n.prop("menu_item_show_mdx"),
-			callback: function(key, options) {
-				var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
-				$.fancybox(html, {
-					'autoDimensions': true,
-					'overlayShow': true,
-					'hideOnOverlayClick': false,
-					'hideOnContentClick': false,
-					'enableEscapeButton': false,
-					'showCloseButton': true,
-				});
-			}			
+				name: $.i18n.prop("menu_item_show_mdx"),
+				callback: function(key, options) {
+					var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
+					$.fancybox(html, {
+						'autoDimensions': true,
+						'overlayShow': true,
+						'hideOnOverlayClick': false,
+						'hideOnContentClick': false,
+						'enableEscapeButton': false,
+						'showCloseButton': true,
+					});
+				},
+				icon: "mdx"			
 		}
-		
+
 		menu.reset = {
-            name: $.i18n.prop("menu_item_reset"), 
-            callback: function() {
-            	myself.query.reset();
-            	Dashboards.getComponent(myself.properties.componentName).update();
-            }
-        };		
+				name: $.i18n.prop("menu_item_reset"), 
+				callback: function() {
+					myself.query.reset();
+					Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "reset"
+		};		
 
 		menu.filesep = "---";
 
 		var openMenu = myself.buildOpenMenu();
-		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items};		
-		
+		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items, icon: "openIn"};		
+
 		var fileMenu = myself.buildFileMenu();
 		menu.file = {name: $.i18n.prop("menu_item_file"), items: fileMenu.items};		
-		
+
 		menu.export2excel = {
-			name: $.i18n.prop("menu_item_export_to_excel"),
-			callback: function(key, options) {
-				myself.exportToExcel();
-			}
+				name: $.i18n.prop("menu_item_export_to_excel"),
+				callback: function(key, options) {
+					myself.exportToExcel();
+				},
+				icon: "excel"
 		};
-		
+
 		return {
-		    callback: function(key, options) {
-		    	if(targetType == "DIMENSION" && !hasMoC && target.hasOwnProperty("index")) {
+			callback: function(key, options) {
+				if(targetType == "DIMENSION" && !hasMoC && target.hasOwnProperty("index")) {
 					//console.log("-------------------- drill column by " + key + " --------------------");
 					//console.log(target);
 					//console.log(normalizedCdaResult);
-					
+
 					var measures = myself.query.getMeasures();
 
 					//console.log(measures.toSource());
@@ -1804,14 +2099,14 @@ bt.components.BTable = function(spec) {
 					//console.log(pivotDimensions.toSource());
 
 					var queryFilters = myself.query.getFilters();
-					
+
 					var dimensions = $.grep(queryFilters, function(f) {
 						var qn = f[0];
 						return qn == key || qn.split("].[")[0] == key.split("].[")[0];						
 					});
 
 					//console.log(dimensions.toSource());
-					
+
 					var filters = $.grep(queryFilters, function(f) {
 						return f[0].split("].[")[0] != key.split("].[")[0];
 					});
@@ -1821,7 +2116,7 @@ bt.components.BTable = function(spec) {
 					if($.inArray("MEASURES", pivotDimensionQualifiedNames) < 0)
 						count++;
 					var index = myself.properties.hideSpans ? target.index : (target.index + count);
-					
+
 					if(headers.length == 1) {
 						index = target.index;
 					}
@@ -1836,23 +2131,23 @@ bt.components.BTable = function(spec) {
 						}
 						cdaHeaderParts[length-1] = "[" + cdaHeaderParts[length-1];
 					}
-					
+
 					//console.log(cdaHeaderParts.toSource());
-					
+
 					var dimensionQualifiedNames = myself.query.getDimensionQualifiedNames();
-					
+
 					var ht = new Array();
 					var levelQualifiedNames = dimensionQualifiedNames.slice().reverse();
 					var previousHierarchy = ""; 
 					var maxLevelDepth = 1;
 					for(i = 0; i < levelQualifiedNames.length; i++) {
 						var levelQualifiedName = levelQualifiedNames[i];
-										
+
 						var hierarchy = levelQualifiedName.split("].[")[0].substring(1);
-						
+
 						if(levelQualifiedName.indexOf("].[") < 0)
 							hierarchy = hierarchy.substring(0, hierarchy.length-1);
-						
+
 						var index = -1;
 						$.each(cdaHeaderParts, function(j, w) {
 							if(w.indexOf("[" + hierarchy + "]") > -1 || w.indexOf("[" + hierarchy + "." + hierarchy + "]") > -1) {
@@ -1860,11 +2155,11 @@ bt.components.BTable = function(spec) {
 								return;
 							}
 						});
-						
+
 						//console.log(levelQualifiedName + " -> " + hierarchy + " -> " + index);
-						
+
 						ht[levelQualifiedName] = "";
-						
+
 						if(index >= 0) {						
 							var member = cdaHeaderParts[0];
 							if(cdaHeaderParts.length > 1 || (member != "[Measures].[MeasuresLevel]" && $.inArray(member, pivotDimensionQualifiedNames) < 0)) {
@@ -1876,14 +2171,14 @@ bt.components.BTable = function(spec) {
 								}
 							}
 							ht[levelQualifiedName] = member;
-			
+
 							if(hierarchy != previousHierarchy) {
 								previousHierarchy = hierarchy;
 								maxLevelDepth = myself.olapCube.getLevelDepth(levelQualifiedName);
 							}
-						
+
 						}
-						
+
 						//console.log("ht[" + levelQualifiedName + "] = " + ht[levelQualifiedName]);				
 					}
 
@@ -1903,14 +2198,14 @@ bt.components.BTable = function(spec) {
 									rightArr.push(el);								
 							}
 						});
-						
+
 						dimensions = leftArr.concat([[key, ""]], rightArr);
 					}
 					else {
 						$.each(dimensionQualifiedNames, function(i, v) {
 							filters.push([v, "include:[" + ht[v] + "]"]);
 						});
-						
+
 						var keyDepth = myself.olapCube.getLevelDepth(key);
 						var leftArr = [];
 						var rightArr = [];
@@ -1923,11 +2218,11 @@ bt.components.BTable = function(spec) {
 						});
 						dimensions = leftArr.concat([[key, ""]], rightArr);
 					}
-					
+
 					//console.log(dimensions.toSource());
 
 					//console.log(filters.toSource());					
-					
+
 					//console.log("-----------------------------------------------------------");
 
 					var currentDimensions = myself.query.getDimensions();
@@ -1940,9 +2235,9 @@ bt.components.BTable = function(spec) {
 							v[1] = d[0][1];
 						}
 					});
-					
+
 					//console.log(dimensions.toSource());
-					
+
 					$.each(filters, function(i, v) {
 						var qn = v[0];
 						if(v[1].indexOf("BT_TOTAL") > -1 || v[1].indexOf("undefined") > -1) {
@@ -1952,12 +2247,12 @@ bt.components.BTable = function(spec) {
 							v[1] = d[0][1];
 						}
 					});
-					
+
 					//console.log(filters.toSource());
 
 
 					var querySetting = myself.query.getSettings();
-					
+
 					var BTableDrillProp = {};
 					BTableDrillProp.catalog = myself.properties.catalog;
 					BTableDrillProp.jndi = myself.properties.jndi;
@@ -1976,100 +2271,112 @@ bt.components.BTable = function(spec) {
 					BTableDrillProp.totalsPosition = querySetting.summary.position;
 					BTableDrillProp.hideSpans = myself.properties.hideSpans;
 					BTableDrillProp.drillTarget = myself.properties.drillTarget;
-					
+					BTableDrillProp.showAlarms = myself.properties.showAlarms;
+					BTableDrillProp.template = myself.properties.template;
+					BTableDrillProp.showTable = myself.properties.showTable;
+					BTableDrillProp.showZeros = myself.properties.showZeros;
+					BTableDrillProp.showToolbar = myself.properties.showToolbar;
+
 					//console.log(BTableDrillProp);
-					
+
 					var urlQuery = getURLQuery();
 
 					var url = bt.helpers.general.getRenderServiceUrl() + "?";
 					url += "btdef=" + encodeURIComponent(JSON.stringify(BTableDrillProp));
 					url += (urlQuery.hasOwnProperty("debug") && urlQuery.debug == "true") ? "&debug=true" : "";
+					//Manage history
+					myself.query.saveInHistory();
+					var hstObjName = (0|Math.random()*9e6).toString(36);
+					url += "&history=" + hstObjName;
+					sessionStorage.setItem(hstObjName, myself.query.getHistory());
+					sessionStorage.setItem(hstObjName + "_FM", myself.query.getHstFM());
+					sessionStorage.setItem(hstObjName + "_OM", myself.query.getHstOM());
 					
 					//console.log(url);
-					
+
 					if(myself.properties.drillTarget == "SELF")
 						window.open(url, "_self");
 					else if(myself.properties.drillTarget == "NEW_TAB" && typeof top.mantle_openTab !== "undefined")
 						top.mantle_openTab("BTable", "BTable", url);
 					else
 						window.open(url, "_blank");
-		    	} else {
-		    		Dashboards.getComponent(myself.properties.componentName).update();
-		    	}
-		    },
-		    items: menu
+				} else {
+					Dashboards.getComponent(myself.properties.componentName).update();
+				}
+			},
+			items: menu
 		};
 	};
-	
-	
+
+
 	myself.buildSettingsMenu = function() {
 		var menu = {};
-		
+
 		var settings = myself.query.getSettings();
-		
+
 		menu.items = {
-	        nonEmptyCol: {
-                name: $.i18n.prop("menu_item_table_settings_non_empty_columns"), 
-                type: 'checkbox', 
-                selected: settings.nonEmpty.columns,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({nonEmpty: {columns: !settings.nonEmpty.columns}});
-                    }
-                }
-            },
-            nonEmptyRow: {
-                name: $.i18n.prop("menu_item_table_settings_non_empty_rows"), 
-                type: 'checkbox', 
-                selected: settings.nonEmpty.rows,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({nonEmpty: {rows: !settings.nonEmpty.rows}});
-                    }
-                }
-            },
-            sep1: "---------",
-	        grandTotal: {
-                name: $.i18n.prop("menu_item_table_settings_grand_total"), 
-                type: 'checkbox', 
-                selected: settings.summary.grandTotal,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({summary: {grandTotal: !settings.summary.grandTotal}});
-                    }
-                }
-            },
-            subtotals: {
-                name: $.i18n.prop("menu_item_table_settings_subtotals"), 
-                type: 'checkbox', 
-                selected: settings.summary.subTotals,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({summary: {subTotals: !settings.summary.subTotals}});
-                    }
-                }
-            },
-	        pivotGrandTotal: {
-                name: $.i18n.prop("menu_item_table_settings_pivot_grand_total"), 
-                type: 'checkbox', 
-                selected: settings.summary.pivotGrandTotal,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({summary: {pivotGrandTotal: !settings.summary.pivotGrandTotal}});
-                    }
-                }
-            },
-            pivotSubtotals: {
-                name: $.i18n.prop("menu_item_table_settings_pivot_subtotals"), 
-                type: 'checkbox', 
-                selected: settings.summary.pivotSubTotals,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({summary: {pivotSubTotals: !settings.summary.pivotSubTotals}});
-                    }
-                }
-            },
-            /*totalsPosition: {
+				nonEmptyCol: {
+					name: $.i18n.prop("menu_item_table_settings_non_empty_columns"), 
+					type: 'checkbox', 
+					selected: settings.nonEmpty.columns,
+					events: {
+						click: function(e) {
+							myself.query.set({nonEmpty: {columns: !settings.nonEmpty.columns}});
+						}
+					}
+				},
+				nonEmptyRow: {
+					name: $.i18n.prop("menu_item_table_settings_non_empty_rows"), 
+					type: 'checkbox', 
+					selected: settings.nonEmpty.rows,
+					events: {
+						click: function(e) {
+							myself.query.set({nonEmpty: {rows: !settings.nonEmpty.rows}});
+						}
+					}
+				},
+				sep1: "---------",
+				grandTotal: {
+					name: $.i18n.prop("menu_item_table_settings_grand_total"), 
+					type: 'checkbox', 
+					selected: settings.summary.grandTotal,
+					events: {
+						click: function(e) {
+							myself.query.set({summary: {grandTotal: !settings.summary.grandTotal}});
+						}
+					}
+				},
+				subtotals: {
+					name: $.i18n.prop("menu_item_table_settings_subtotals"), 
+					type: 'checkbox', 
+					selected: settings.summary.subTotals,
+					events: {
+						click: function(e) {
+							myself.query.set({summary: {subTotals: !settings.summary.subTotals}});
+						}
+					}
+				},
+				pivotGrandTotal: {
+					name: $.i18n.prop("menu_item_table_settings_pivot_grand_total"), 
+					type: 'checkbox', 
+					selected: settings.summary.pivotGrandTotal,
+					events: {
+						click: function(e) {
+							myself.query.set({summary: {pivotGrandTotal: !settings.summary.pivotGrandTotal}});
+						}
+					}
+				},
+				pivotSubtotals: {
+					name: $.i18n.prop("menu_item_table_settings_pivot_subtotals"), 
+					type: 'checkbox', 
+					selected: settings.summary.pivotSubTotals,
+					events: {
+						click: function(e) {
+							myself.query.set({summary: {pivotSubTotals: !settings.summary.pivotSubTotals}});
+						}
+					}
+				},
+				/*totalsPosition: {
                 name: "Position", 
                 type: 'select', 
                 options: {'top': 'Top', 'bottom': 'Bottom'}, 
@@ -2080,187 +2387,232 @@ bt.components.BTable = function(spec) {
                     }
                 }
             },*/
-            sep2: "---------",            
-            measuresOnColumns: {
-                name: $.i18n.prop("menu_item_table_settings_measures_on_columns"), 
-                type: 'radio', 
-                radio: 'swap_axis', 
-                value: 'true',
-                selected: settings.measuresOnColumns,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({measuresOnColumns: true});
-                    }
-                }
-            },
-            measuresOnRows: {
-                name: $.i18n.prop("menu_item_table_settings_measures_on_rows"), 
-                type: 'radio', 
-                radio: 'swap_axis', 
-                value: 'false', 
-                selected: !settings.measuresOnColumns,
-                events: {
-                    click: function(e) {
-                    	myself.query.set({measuresOnColumns: false});
-                    }
-                }
-            },
-            sep3: "---------",
-	        hideSpans: {
-                name: $.i18n.prop("menu_item_table_settings_hide_spans"), 
-                type: 'checkbox', 
-                selected: myself.properties.hideSpans,
-                events: {
-                    click: function(e) {
-                    	myself.properties.hideSpans = !myself.properties.hideSpans;
-                    }
-                }
-            },
-	        fixedHeader: {
-                name: $.i18n.prop("menu_item_table_settings_fixed_header"),
-                type: 'checkbox', 
-                selected: myself.properties.fixedHeader,
-                events: {
-                    click: function(e) {
-                    	myself.properties.fixedHeader = !myself.properties.fixedHeader;
-                    }
-                }
-            },
-            sep4: "---------",
-            apply: {
-                name: $.i18n.prop("menu_item_table_settings_apply_changes"), 
-                callback: function() {
-                	Dashboards.getComponent(myself.properties.componentName).update();
-                }
-            }			
+				sep2: "---------",            
+				measuresOnColumns: {
+					name: $.i18n.prop("menu_item_table_settings_measures_on_columns"), 
+					type: 'radio', 
+					radio: 'swap_axis', 
+					value: 'true',
+					selected: settings.measuresOnColumns,
+					events: {
+						click: function(e) {
+							myself.query.set({measuresOnColumns: true});
+						}
+					}
+				},
+				measuresOnRows: {
+					name: $.i18n.prop("menu_item_table_settings_measures_on_rows"), 
+					type: 'radio', 
+					radio: 'swap_axis', 
+					value: 'false', 
+					selected: !settings.measuresOnColumns,
+					events: {
+						click: function(e) {
+							myself.query.set({measuresOnColumns: false});
+						}
+					}
+				},
+				sep3: "---------",
+				hideSpans: {
+					name: $.i18n.prop("menu_item_table_settings_hide_spans"), 
+					type: 'checkbox', 
+					selected: myself.properties.hideSpans,
+					events: {
+						click: function(e) {
+							myself.properties.hideSpans = !myself.properties.hideSpans;
+						}
+					}
+				},
+				fixedHeader: {
+					name: $.i18n.prop("menu_item_table_settings_fixed_header"),
+					type: 'checkbox', 
+					selected: myself.properties.fixedHeader,
+					events: {
+						click: function(e) {
+							myself.properties.fixedHeader = !myself.properties.fixedHeader;
+						}
+					}
+				},
+				showAlarms: {
+					name: $.i18n.prop("menu_item_table_settings_show_alarms"),
+					type: 'checkbox', 
+					selected: myself.properties.showAlarms,
+					events: {
+						click: function(e) {
+							myself.properties.showAlarms = !myself.properties.showAlarms;
+						}
+					}
+				},
+				showZeros: {
+					name: $.i18n.prop("menu_item_table_settings_show_zeros"),
+					type: 'checkbox', 
+					selected: myself.properties.showZeros,
+					events: {
+						click: function(e) {
+							myself.properties.showZeros = !myself.properties.showZeros;
+						}
+					}
+				},
+				sep4: "---------",
+				apply: {
+					name: $.i18n.prop("menu_item_table_settings_apply_changes"), 
+					callback: function() {
+						Dashboards.getComponent(myself.properties.componentName).update();
+					}
+				}			
 		};
 
 		menu.items.sep5 = "---------";
 		if(myself.properties.renderDashboard) {
 			menu.items.drillHere = {
-				name: $.i18n.prop("menu_item_table_settings_drill_here"), 
-				type: 'radio', 
-				radio: 'drill_target', 
-				value: 'SELF',
-				selected: myself.properties.drillTarget == "SELF",
-				events: {
-					click: function(e) {
-						myself.properties.drillTarget = "SELF";
+					name: $.i18n.prop("menu_item_table_settings_drill_here"), 
+					type: 'radio', 
+					radio: 'drill_target', 
+					value: 'SELF',
+					selected: myself.properties.drillTarget == "SELF",
+					events: {
+						click: function(e) {
+							myself.properties.drillTarget = "SELF";
+						}
 					}
-				}
 			};
 		}
 		if(typeof top.mantle_openTab !== "undefined") {	
 			menu.items.drillInNewTab = {
-				name: $.i18n.prop("menu_item_table_settings_drill_in_new_tab"), 
-				type: 'radio', 
-				radio: 'drill_target', 
-				value: 'NEW_TAB',
-				selected: myself.properties.drillTarget == "NEW_TAB",
-				events: {
-					click: function(e) {
-						myself.properties.drillTarget = "NEW_TAB";
+					name: $.i18n.prop("menu_item_table_settings_drill_in_new_tab"), 
+					type: 'radio', 
+					radio: 'drill_target', 
+					value: 'NEW_TAB',
+					selected: myself.properties.drillTarget == "NEW_TAB",
+					events: {
+						click: function(e) {
+							myself.properties.drillTarget = "NEW_TAB";
+						}
 					}
-				}
 			};
 		}		
 		menu.items.drillInNewWindow = {
-			name: $.i18n.prop("menu_item_table_settings_drill_in_new_window"), 
-			type: 'radio', 
-			radio: 'drill_target', 
-			value: 'NEW_WINDOW', 
-			selected: myself.properties.drillTarget == "NEW_WINDOW",
-			events: {
-				click: function(e) {
-					myself.properties.drillTarget = "NEW_WINDOW";
+				name: $.i18n.prop("menu_item_table_settings_drill_in_new_window"), 
+				type: 'radio', 
+				radio: 'drill_target', 
+				value: 'NEW_WINDOW', 
+				selected: myself.properties.drillTarget == "NEW_WINDOW",
+				events: {
+					click: function(e) {
+						myself.properties.drillTarget = "NEW_WINDOW";
+					}
 				}
-			}
 		};		
-		
+
 		return menu;
 	}
-	
-	myself.buildBodyContextMenu = function(state) {
-	  	var hasMoC = myself.query.hasMeasuresOnColumns();
 
-	  	var rawData = state.rawData;
-    	var tableData = state.tableData;
-    	var colIdx = state.colIdx;
-    	var rowIdx = state.rowIdx;
-    	var row = rawData.resultset[rowIdx];
-    	var column = rawData.metadata[colIdx].colName;
-    	var value =  rawData.resultset[rowIdx][colIdx];
-    	
-    	//console.log(row);
-    	//console.log(column);
-    	//console.log(value);
-		
-    	var menu = {};
-    	
-    	var menuType = "";
+	myself.buildBodyContextMenu = function(state) {
+		var hasMoC = myself.query.hasMeasuresOnColumns();
+
+		var rawData = state.rawData;
+		var tableData = state.tableData;
+		var colIdx = state.colIdx;
+		var rowIdx = state.rowIdx;
+		var row = rawData.resultset[rowIdx];
+		var column = rawData.metadata[colIdx].colName;
+		var value =  rawData.resultset[rowIdx][colIdx];
+		var measureIdx=-1;
+		if (value.toString().indexOf("|") > 0) {
+			var splittedMeasure = value.split("|");
+			value = splittedMeasure[0];
+			measureIdx = splittedMeasure[1];
+		}
+
+		//console.log(row);
+		//console.log(column);
+		//console.log(value);
+
+		var menu = {};
+
+		var menuType = "";
 		if(column.indexOf("[Measures]") < 0) {
 			if($.inArray(column, myself.query.getPivotDimensionQualifiedNames()) > -1)
 				menuType = "MEMBER_MENU";
 			else
 				menuType = hasMoC ? "DRILL_ROW_MENU" : "DRILL_CELL_MENU";
 		} else {
-				menuType = hasMoC ? "DRILL_CELL_MENU" : "MEASURE_MENU";
+			menuType = hasMoC ? "DRILL_CELL_MENU" : "MEASURE_MENU";
 		}
-		    	
-		var btRef = {};
-    	if(menuType == "MEASURE_MENU") {
-    		btRef.level = "[Measures].[" + value + "]",
-    		btRef.member = value
-    	}
-    	else if(menuType == "DRILL_ROW_MENU" || menuType == "MEMBER_MENU") {
-    		btRef.level = column,
-    		btRef.member = value
-    	}
 
-    	else if(menuType == "DRILL_CELL_MENU") {
-    		var measureLevel = "";
-    		if(hasMoC) {
-    			var parts = column.split("]/[");
-    			$.each(parts, function(i, v) {
-    				if(v.indexOf("Measures].[") > -1) {
-    					measureLevel = ("[" + v + "]").replace("[[", "[").replace("]]", "]");
-    					return;
-    				}
-    			});
-    		}
-    		else {
-    			var measuresIdx = $.inArray("[Measures].[MeasuresLevel]", $.map(rawData.metadata, function(e){ return e.colName; }));
-    			measureLevel = myself.olapCube.getQualifiedNameByCaption(tableData[rowIdx][measuresIdx], "L");
-    		}
-    		btRef.level = measureLevel,
-    		btRef.member = value
-    	}
-		
+		var btRef = {};
+		//var measureIdx = (rowIdx % myself.getMeasures().length) + 1;
+		if(menuType == "MEASURE_MENU") {
+			btRef.level = "[Measures].[" + value + "]",
+			btRef.member = value,
+			btRef.measureIdx = measureIdx
+		}
+		else if(menuType == "DRILL_ROW_MENU" || menuType == "MEMBER_MENU") {
+			btRef.level = column,
+			btRef.member = value,
+			btRef.measureIdx = measureIdx
+		}
+
+		else if(menuType == "DRILL_CELL_MENU") {
+			var measureLevel = "";
+			if(hasMoC) {
+				var parts = column.split("]/[");
+				$.each(parts, function(i, v) {
+					if(v.indexOf("Measures].[") > -1) {
+						measureLevel = ("[" + v + "]").replace("[[", "[").replace("]]", "]");
+						return;
+					}
+				});
+			}
+			else {
+				var measuresIdx = $.inArray("[Measures].[MeasuresLevel]", $.map(rawData.metadata, function(e){ return e.colName; }));
+				var measureValue = tableData[rowIdx][measuresIdx];
+				if (measureValue.indexOf("|") > 0)
+					measureValue = measureValue.substring(0, measureValue.indexOf("|"));
+				measureLevel = myself.olapCube.getQualifiedNameByCaption(measureValue, "L");
+			}
+			btRef.level = measureLevel,
+			btRef.member = value,
+			btRef.measureIdx = measureIdx
+		}
+
 		if(value == null)
 			menuType = "MEMBER_MENU";
-		
 
-    	if(menuType == "DRILL_ROW_MENU") {
-    		var dimensions = myself.query.getDimensionQualifiedNames();
-    		if(btRef.level != dimensions[dimensions.length - 1])
-    			menuType = "MEMBER_MENU";
-    	}
-    	    	
-    	//console.log(menuType);
-    	
+
+		if(menuType == "DRILL_ROW_MENU") {
+			var dimensions = myself.query.getDimensionQualifiedNames();
+			if(btRef.level != dimensions[dimensions.length - 1])
+				menuType = "MEMBER_MENU";
+		}
+
+		//console.log(menuType);
+
 		var title = myself.getMenuTitle(btRef);
-		
+
 		menu.title = {name: "<strong>" + title + "</strong>", callback: function(key, options) {}};
+		menu.template={
+				name: "<i>" + $.i18n.prop("menu_item_template") +  myself.properties.template.substring(myself.properties.template.lastIndexOf("/")+1, myself.properties.template.lastIndexOf(".bttemplate"))+ "</i>",
+				callback: function(key, options) {
+					myself.loadTemplate();
+					//window.location.reload();
+					//Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "template"
+		};
 		menu.titlesep = "---";
-		
+
 
 		if(menuType == "MEASURE_MENU") {
 			var allMeasures = myself.olapCube.getStructure().measures;
 			var queryMeasures = myself.query.getMeasureQualifiedNames();
+			/* 
 			var newMeasures = $.grep(allMeasures, function(e, i) {
 				return queryMeasures.indexOf(e.qualifiedName) < 0;
 			});
-						
+			 */
+			var newMeasures = jQuery.extend([], allMeasures);
+
 			newMeasures.sort(function(a, b) {
 				var comparison = 0;
 				if(a.caption < b.caption)
@@ -2269,19 +2621,31 @@ bt.components.BTable = function(spec) {
 					comparison = 1;
 				return comparison;
 			});
-			
-			
-			menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newMeasures.length == 0};
-			menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newMeasures.length == 0};
+
+
+			menu.back = {
+					name: $.i18n.prop("menu_item_back"),
+					disabled: !myself.query.hasHistory(),
+					callback: function(key, options) {
+						myself.query.restoreFromHistory();
+						Dashboards.getComponent(myself.properties.componentName).update();
+					},
+					icon: "back"
+			};
+			menu.backSep = "---";
+			menu.add = {name: $.i18n.prop("menu_item_add"), items: {}, disabled: newMeasures.length == 0, icon: "add"};
+			menu.change = {name: $.i18n.prop("menu_item_change"), items: {}, disabled: newMeasures.length == 0, icon: "change"};
 			menu.remove = {
-				name: $.i18n.prop("menu_item_remove"),
-				disabled: queryMeasures.length == 1,
-				callback: function(key, options) {
-					myself.query.remove(btRef.level, menuType.substring(0,1));
-					Dashboards.getComponent(myself.properties.componentName).update();
-				}
+					name: $.i18n.prop("menu_item_remove"),
+					disabled: queryMeasures.length == 1,
+					callback: function(key, options) {
+						myself.query.saveInHistory();
+						myself.query.remove(btRef.level, menuType.substring(0,1), btRef.measureIdx);
+						Dashboards.getComponent(myself.properties.componentName).update();
+					},
+					icon: "delete"
 			};				
-			
+
 			$.each(newMeasures, function(i, v) {
 				menu.add.items["add-kpi-" + i] = {};
 				menu.add.items["add-kpi-" + i].name = v.caption;
@@ -2289,20 +2653,23 @@ bt.components.BTable = function(spec) {
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"] = {};
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"].name = $.i18n.prop("menu_item_add_before");
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-before"].callback = function(key, options) {
-					myself.query.add(v.qualifiedName, btRef.level, -1, menuType.substring(0,1));
+					myself.query.saveInHistory();
+					myself.query.add(v.qualifiedName, btRef.level, -1, menuType.substring(0,1), btRef.measureIdx);
 					Dashboards.getComponent(myself.properties.componentName).update();
 				};
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"] = {};
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"].name = $.i18n.prop("menu_item_add_after");
 				menu.add.items["add-kpi-" + i].items["add-kpi-" + i + "-after"].callback = function(key, options) {
-					myself.query.add(v.qualifiedName, btRef.level, 1, menuType.substring(0,1));
+					myself.query.saveInHistory();
+					myself.query.add(v.qualifiedName, btRef.level, 1, menuType.substring(0,1), btRef.measureIdx);
 					Dashboards.getComponent(myself.properties.componentName).update();
 				};
-				
+
 				menu.change.items["change-kpi-" + i] = {};
 				menu.change.items["change-kpi-" + i].name = v.caption;
 				menu.change.items["change-kpi-" + i].callback = function(key, options) {
-					myself.query.replace(v.qualifiedName, btRef.level, null, menuType.substring(0,1));
+					myself.query.saveInHistory();
+					myself.query.replace(v.qualifiedName, btRef.level, null, menuType.substring(0,1), btRef.measureIdx);
 					Dashboards.getComponent(myself.properties.componentName).update();
 				};
 			});
@@ -2310,63 +2677,64 @@ bt.components.BTable = function(spec) {
 			var sortDirection = myself.query.getSortDirection("D", btRef.level);
 
 			menu.sort = {
-				name: $.i18n.prop("menu_item_sort"), 
-				items: {
-					asc: {
-						name: $.i18n.prop("menu_item_sort_ascending"),
-						items: {
-							kasc: {
-								name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-								disabled: sortDirection == "ASC",
-								callback: function(key, options) {
-									myself.query.sort("D", btRef.level, "ASC");
-									Dashboards.getComponent(myself.properties.componentName).update();
+					name: $.i18n.prop("menu_item_sort"), 
+					items: {
+						asc: {
+							name: $.i18n.prop("menu_item_sort_ascending"),
+							items: {
+								kasc: {
+									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+									disabled: sortDirection == "ASC",
+									callback: function(key, options) {
+										myself.query.sort("D", btRef.level, "ASC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								},
+								basc: {
+									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+									disabled: sortDirection == "BASC",
+									callback: function(key, options) {
+										myself.query.sort("D", btRef.level, "BASC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
 								}
-							},
-							basc: {
-								name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-								disabled: sortDirection == "BASC",
-								callback: function(key, options) {
-									myself.query.sort("D", btRef.level, "BASC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
+							}
+						},
+						desc: {
+							name: $.i18n.prop("menu_item_sort_descending"),
+							items: {
+								kdesc: {
+									name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
+									disabled: sortDirection == "DESC",
+									callback: function(key, options) {
+										myself.query.sort("D", btRef.level, "DESC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								},
+								bdesc: {
+									name: $.i18n.prop("menu_item_sort_break_hierarchy"),
+									disabled: sortDirection == "BDESC",
+									callback: function(key, options) {
+										myself.query.sort("D", btRef.level, "BDESC");
+										Dashboards.getComponent(myself.properties.componentName).update();
+									}
+								}							
+							}
+						},
+						clear: {
+							name: $.i18n.prop("menu_item_sort_clear"),
+							disabled: sortDirection == "",
+							callback: function(key, options) {
+								myself.query.sort("D", "", "");
+								Dashboards.getComponent(myself.properties.componentName).update();
 							}
 						}
 					},
-					desc: {
-						name: $.i18n.prop("menu_item_sort_descending"),
-						items: {
-							kdesc: {
-								name: $.i18n.prop("menu_item_sort_keep_hierarchy"),
-								disabled: sortDirection == "DESC",
-								callback: function(key, options) {
-									myself.query.sort("D", btRef.level, "DESC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
-							},
-							bdesc: {
-								name: $.i18n.prop("menu_item_sort_break_hierarchy"),
-								disabled: sortDirection == "BDESC",
-								callback: function(key, options) {
-									myself.query.sort("D", btRef.level, "BDESC");
-									Dashboards.getComponent(myself.properties.componentName).update();
-								}
-							}							
-						}
-					},
-					clear: {
-						name: $.i18n.prop("menu_item_sort_clear"),
-						disabled: sortDirection == "",
-						callback: function(key, options) {
-							myself.query.sort("D", "", "");
-							Dashboards.getComponent(myself.properties.componentName).update();
-						}
-					}
-				}
+					icon: "sort"
 			};			
-			
-			menu.pivot = {name: $.i18n.prop("menu_item_pivot"), items: {}};
-			
+
+			menu.pivot = {name: $.i18n.prop("menu_item_pivot"), items: {}, icon: "pivot"};
+
 			var allLevels = myself.olapCube.getLevels();
 			var queryDimensionLevels = myself.query.getDimensionQualifiedNames();
 			var queryPivotLevels = myself.query.getPivotDimensionQualifiedNames();
@@ -2377,24 +2745,24 @@ bt.components.BTable = function(spec) {
 			var invalidHierachies = _.uniq($.map(queryDimensionLevels, function(e, i) {
 				return e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1);
 			}));
-			
+
 			//console.log(invalidHierachies);
-			
+
 			newLevels = $.grep(newLevels, function(e, i) {
 				return $.inArray(e.qualifiedName.split("].[")[0].substring(1), invalidHierachies) < 0;
 			});
-			
+
 			//console.log(newLevels);			
-			
+
 			var newLevelsAsObjects = $.map(newLevels, function(e, i) {
 				var qn = e.qualifiedName;
 				var qnParts = qn.split("].[");
 				var h = qnParts[0].substring(1);
 				var l = qnParts[1].substring(0, qnParts[1].length-1);
-				
+
 				return {hierarchy: h, level: l, qualifiedName: qn};
 			});
-						
+
 			var hierarchies = $.map(newLevelsAsObjects, function(e, i) {
 				return e.hierarchy;
 			});
@@ -2409,9 +2777,9 @@ bt.components.BTable = function(spec) {
 					comparison = 1;
 				return comparison;
 			});
-			
+
 			//console.log(hierarchies);
-			
+
 			var menuMatrix = [];
 			$.each(newLevelsAsObjects, function(i, v) {
 				var h = v.hierarchy;
@@ -2421,19 +2789,19 @@ bt.components.BTable = function(spec) {
 					menuMatrix[h] = [];
 				menuMatrix[h].push({name: l, qualifiedName: qn});
 			});
-			
+
 			//console.log(menuMatrix);
 
 			var axisLevels = myself.query.getPivotDimensionQualifiedNames();		
 			var axisHierarchies = $.map(axisLevels, function(e, i) {
 				return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 			});
-			
+
 			//console.log(axisHierarchies);
-			
+
 			$.each(hierarchies, function(i, hierarchy) {
 				var hierarchyCaption = myself.olapCube.getCaption("[" + hierarchy + "]");
-				
+
 				menu.pivot.items["add-pivot-" + i] = {};
 				menu.pivot.items["add-pivot-" + i].name = hierarchyCaption;
 				menu.pivot.items["add-pivot-" + i].items = {};
@@ -2445,20 +2813,23 @@ bt.components.BTable = function(spec) {
 					if($.inArray(hierarchy, axisHierarchies) > -1) {
 						menu.pivot.items["add-pivot-" + i].callback = function(key, options) {
 							var position = myself.getPositionInHierarchyInAxis(newLevel, axisLevels);
-							myself.query.add(newLevel, position.level, position.direction, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, position.level, position.direction, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 					} else {
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"].name = $.i18n.prop("menu_item_add_before");
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-before"].callback = function(key, options) {
-							myself.query.add(newLevel, "MEASURES", -1, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, "MEASURES", -1, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"].name = $.i18n.prop("menu_item_add_after");
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-after"].callback = function(key, options) {
-							myself.query.add(newLevel, "MEASURES", 1, "P");
+							myself.query.saveInHistory();
+							myself.query.add(newLevel, "MEASURES", 1, "P", -1);
 							Dashboards.getComponent(myself.properties.componentName).update();
 						};
 					}					
@@ -2466,122 +2837,141 @@ bt.components.BTable = function(spec) {
 					$.each(levels, function(j, level) {
 						var newLevel = level.qualifiedName;
 						var newLevelCaption = myself.olapCube.getCaption(newLevel);
-						
+
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j] = {};
 						menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].name = newLevelCaption;
 						if($.inArray(hierarchy, axisHierarchies) > -1) {
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].callback = function(key, options) {
+								myself.query.saveInHistory();
 								var position = myself.getPositionInHierarchyInAxis(newLevel, axisLevels);
-								myself.query.add(newLevel, position.level, position.direction, "P");
+								myself.query.add(newLevel, position.level, position.direction, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 						} else {
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items = {};
-							
+
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"] = {};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"].name = $.i18n.prop("menu_item_add_before");
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-before"].callback = function(key, options) {
-								myself.query.add(newLevel, "MEASURES", -1, "P");
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, "MEASURES", -1, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"] = {};
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"].name = $.i18n.prop("menu_item_add_after");
 							menu.pivot.items["add-pivot-" + i].items["add-pivot-" + i + "-" + j].items["add-pivot-" + i + "-" + j + "-after"].callback = function(key, options) {
-								myself.query.add(newLevel, "MEASURES", 1, "P");
+								myself.query.saveInHistory();
+								myself.query.add(newLevel, "MEASURES", 1, "P", -1);
 								Dashboards.getComponent(myself.properties.componentName).update();
 							};
 						}												
 					});			
 				}
 			});
-			
+
 		}
-		
+
 		else if(menuType == "DRILL_ROW_MENU") {
 			var items = myself.buildDrillMenu();
 			var disabled = $.isEmptyObject(items) ? true : false;
 			menu.drill = {
-				name : $.i18n.prop("menu_item_drill_row"),
-				items: items,
-				disabled: disabled
+					name : $.i18n.prop("menu_item_drill_row"),
+					items: items,
+					disabled: disabled,
+					icon: "drill"
 			};
 		}
-		
+
 		else if(menuType == "DRILL_CELL_MENU") {
 			var items = myself.buildDrillMenu();
 			var disabled = $.isEmptyObject(items) ? true : false;
 			menu.drill = {
-				name : $.i18n.prop("menu_item_drill_cell"),
-				items: items,
-				disabled: disabled
+					name : $.i18n.prop("menu_item_drill_cell"),
+					items: items,
+					disabled: disabled,
+					icon: "drill"
 			};
 		}
-		
+
 		if(menuType != "MEMBER_MENU")
 			menu.filterssep = "---";
 		menu.filters = {
-			name: $.i18n.prop("menu_item_filters_manager"),
-			callback: function(key, options) {
-				myself.openFiltersSelectorPanel("");
-			}
+				name: $.i18n.prop("menu_item_filters_manager"),
+				callback: function(key, options) {
+					myself.openFiltersSelectorPanel("","", "", "");
+				},
+				icon: "filter"
 		};
 
-        menu.toggleFilters = {
-            name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
-            callback: function() {
-            	myself.properties.showFilters = !myself.properties.showFilters;
-            	$("#" + myself.properties.filtersPanelHtmlObject).toggle();
-            }
-        };		
-		
+		menu.toggleFilters = {
+				name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
+						callback: function() {
+							myself.properties.showFilters = !myself.properties.showFilters;
+							$("#" + myself.properties.filtersPanelHtmlObject).toggle();
+						},
+						icon: "filterHide"
+		};		
+
+		menu.toggleToolbar = {
+				name: myself.properties.showToolbar ? $.i18n.prop("menu_item_hide_toolbar") : $.i18n.prop("menu_item_show_toolbar"), 
+						callback: function() {
+							myself.properties.showToolbar = !myself.properties.showToolbar;
+							$("#" + myself.properties.toolbarPanelHtmlObject).toggle();
+						},
+						icon: "toolbarHide"
+		};		
+
 		menu.settingssep = "---";
 		var settingsMenu = myself.buildSettingsMenu();
-		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items};
-		
+		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items, icon: "tableOptions"};
+
 		menu.mdx = {
-			name: $.i18n.prop("menu_item_show_mdx"),
-			callback: function(key, options) {
-				var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
-				$.fancybox(html, {
-					'autoDimensions': true,
-					'overlayShow': true,
-					'hideOnOverlayClick': false,
-					'hideOnContentClick': false,
-					'enableEscapeButton': false,
-					'showCloseButton': true,
-				});
-			}			
+				name: $.i18n.prop("menu_item_show_mdx"),
+				callback: function(key, options) {
+					var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
+					$.fancybox(html, {
+						'autoDimensions': true,
+						'overlayShow': true,
+						'hideOnOverlayClick': false,
+						'hideOnContentClick': false,
+						'enableEscapeButton': false,
+						'showCloseButton': true,
+					});
+				},
+				icon: "mdx"
 		}
 
 		menu.reset = {
-            name: $.i18n.prop("menu_item_reset"), 
-            callback: function() {
-            	myself.query.reset();
-            	Dashboards.getComponent(myself.properties.componentName).update();
-            }
-        };
+				name: $.i18n.prop("menu_item_reset"), 
+				callback: function() {
+					myself.query.reset();
+					Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "reset"
+		};
 
 		menu.filesep = "---";
-		
+
 		var openMenu = myself.buildOpenMenu();
-		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items};
+		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items, icon: "openIn"};
 
 		var fileMenu = myself.buildFileMenu();
 		menu.file = {name: $.i18n.prop("menu_item_file"), items: fileMenu.items};
-		
+
 		menu.export2excel = {
-			name: $.i18n.prop("menu_item_export_to_excel"),
-			callback: function(key, options) {
-				myself.exportToExcel();
-			}
+				name: $.i18n.prop("menu_item_export_to_excel"),
+				callback: function(key, options) {
+					myself.exportToExcel();
+				},
+				icon: "excel"
 		};
-		
+
 		return {
 			callback: function(key, options) {				
 				var drillCell = menuType == "DRILL_CELL_MENU";
 
 				//console.log("Drill " + (drillCell ? "cell" : "row" ) + " by " + key);
-				
+
 				var measures = myself.query.getMeasures();
 				if(drillCell) {
 					if(hasMoC) {
@@ -2596,11 +2986,14 @@ bt.components.BTable = function(spec) {
 								return;
 							}
 						});
-						
+
 						//console.log("measuresLevelIdx = " + measuresLevelIdx);
-						
+
 						measures = $.grep(measures, function(m) {
-							return m[0] == myself.olapCube.getQualifiedNameByCaption(row[measuresLevelIdx], "L");
+							var cellValue = row[measuresLevelIdx];
+							if (cellValue.indexOf("|")>0)
+								cellValue = cellValue.substring(0,cellValue.indexOf("|"));
+							return m[0] == myself.olapCube.getQualifiedNameByCaption(cellValue, "L");
 						});
 					}
 				}			
@@ -2608,10 +3001,10 @@ bt.components.BTable = function(spec) {
 				//console.log(measures.toSource());
 
 				var pivotDimensions = [];
-				
+
 				if(drillCell) {
 					var pivotQualifiedNames = $.grep(myself.query.getPivotDimensionQualifiedNames(), function(e){ return e != "MEASURES"; });
-					
+
 					if(hasMoC) {
 
 						var cdaHeaderParts = column.split("]/[");
@@ -2623,21 +3016,21 @@ bt.components.BTable = function(spec) {
 							}
 							cdaHeaderParts[length-1] = "[" + cdaHeaderParts[length-1];
 						}
-						
+
 						//console.log(cdaHeaderParts.toSource());
-						
+
 						var ht = new Array();
 						var levelQualifiedNames = pivotQualifiedNames.slice().reverse();
 						var previousHierarchy = ""; 
 						var maxLevelDepth = 1;
 						for(i = 0; i < levelQualifiedNames.length; i++) {
 							var levelQualifiedName = levelQualifiedNames[i];
-											
+
 							var hierarchy = levelQualifiedName.split("].[")[0].substring(1);
-							
+
 							if(levelQualifiedName.indexOf("].[") < 0)
 								hierarchy = hierarchy.substring(0, hierarchy.length-1);
-							
+
 							var index = -1;
 							$.each(cdaHeaderParts, function(j, w) {
 								if(w.indexOf("[" + hierarchy + "]") > -1 || w.indexOf("[" + hierarchy + "." + hierarchy + "]") > -1) {
@@ -2645,11 +3038,11 @@ bt.components.BTable = function(spec) {
 									return;
 								}
 							});
-							
+
 							//console.log(levelQualifiedName + " -> " + hierarchy + " -> " + index);
-							
+
 							ht[levelQualifiedName] = "";
-							
+
 							if(index >= 0) {						
 								var member = cdaHeaderParts[0];
 								if(cdaHeaderParts.length > 1 || (member != "[Measures].[MeasuresLevel]" && $.inArray(member, pivotDimensionQualifiedNames) < 0)) {
@@ -2661,44 +3054,44 @@ bt.components.BTable = function(spec) {
 									}
 								}
 								ht[levelQualifiedName] = member;
-				
+
 								if(hierarchy != previousHierarchy) {
 									previousHierarchy = hierarchy;
 									maxLevelDepth = myself.olapCube.getLevelDepth(levelQualifiedName);
 								}
-							
+
 							}
-							
+
 							//console.log("ht[" + levelQualifiedName + "] = " + ht[levelQualifiedName]);				
 						}
-						
+
 						$.each(pivotQualifiedNames, function(i, v) {
 							pivotDimensions.push([v, "include:[" + ht[v] + "]"]);
 						});
-						
+
 					} else {
 						$.each(pivotQualifiedNames, function(i, v) {
 							var idx = $.inArray(v, $.map(rawData.metadata, function(e){ return e.colName }));
-														
+
 							//console.log(v + " @ " + idx);
 
 							pivotDimensions.push([v, "include:[" + row[idx] + "]"]);
 						});
 					}
-					
+
 					var pivotMeasuresIdx = myself.query.getPivotDimensionQualifiedNames().indexOf("MEASURES");
 					//console.log(pivotMeasuresIdx);
 					if(pivotMeasuresIdx >= 0)
 						pivotDimensions.splice(pivotMeasuresIdx, 0, ["MEASURES", ""]);
-						
+
 				} else {
 					pivotDimensions = myself.query.getPivotDimensions();
 				}
 
 				//console.log(pivotDimensions.toSource());
-				
+
 				var queryFilters = myself.query.getFilters();
-				
+
 				var dimensions = $.grep(queryFilters, function(f) {
 					var qn = f[0];
 					return qn == key || qn.split("].[")[0] == key.split("].[")[0];
@@ -2717,7 +3110,7 @@ bt.components.BTable = function(spec) {
 						var keyDepth = myself.olapCube.getLevelDepth(key);
 						var leftArr = [];
 						var rightArr = [];
-						
+
 						$.each(dims, function(i, v) {
 							// a level in query definition could not be found in query result if NON EMPTY is enabled,
 							// so row[i] wouldn't be the right element!!!
@@ -2728,9 +3121,9 @@ bt.components.BTable = function(spec) {
 									return;
 								}
 							});
-							
+
 							//console.log(v + " @ " + idx);
-							
+
 							var el = [v, "include:[" + row[idx] + "]"];
 							if(v.split("].[")[0] != key.split("].[")[0])
 								filters.push(el);
@@ -2741,7 +3134,7 @@ bt.components.BTable = function(spec) {
 									rightArr.push(el);
 							}
 						});
-						
+
 						dimensions = leftArr.concat([[key, ""]], rightArr);
 					}
 					else {
@@ -2753,13 +3146,13 @@ bt.components.BTable = function(spec) {
 									return;
 								}
 							});
-							
+
 							//console.log(v + " @ " + idx);
 
 							var filter = [v, "include:[" + row[idx] + "]"];
 							filters.push(filter);
 						});
-						
+
 						var keyDepth = myself.olapCube.getLevelDepth(key);
 						var leftArr = [];
 						var rightArr = [];
@@ -2772,13 +3165,13 @@ bt.components.BTable = function(spec) {
 						});
 						dimensions = leftArr.concat([[key, ""]], rightArr);
 					}
-					
+
 					//console.log(dimensions.toSource());
-					
+
 				} else {
 					//console.log("-------------------- drill cell MoD --------------------");
 					//console.log(rowIdx + ":" + colIdx + " -> " + column + " -> " + value);
-					
+
 					var cdaHeaderParts = column.split("]/[");
 					var length = cdaHeaderParts.length;
 					if(length > 1) {
@@ -2788,23 +3181,23 @@ bt.components.BTable = function(spec) {
 						}
 						cdaHeaderParts[length-1] = "[" + cdaHeaderParts[length-1];
 					}
-					
+
 					//console.log(cdaHeaderParts.toSource());
-					
+
 					var dimensionQualifiedNames = myself.query.getDimensionQualifiedNames();
-					
+
 					var ht = new Array();
 					var levelQualifiedNames = dimensionQualifiedNames.slice().reverse();
 					var previousHierarchy = ""; 
 					var maxLevelDepth = 1;
 					for(i = 0; i < levelQualifiedNames.length; i++) {
 						var levelQualifiedName = levelQualifiedNames[i];
-										
+
 						var hierarchy = levelQualifiedName.split("].[")[0].substring(1);
-						
+
 						if(levelQualifiedName.indexOf("].[") < 0)
 							hierarchy = hierarchy.substring(0, hierarchy.length-1);
-						
+
 						var index = -1;
 						$.each(cdaHeaderParts, function(j, w) {
 							if(w.indexOf("[" + hierarchy + "]") > -1 || w.indexOf("[" + hierarchy + "." + hierarchy + "]") > -1) {
@@ -2812,11 +3205,11 @@ bt.components.BTable = function(spec) {
 								return;
 							}
 						});
-						
+
 						//console.log(levelQualifiedName + " -> " + hierarchy + " -> " + index);
-						
+
 						ht[levelQualifiedName] = "";
-						
+
 						if(index >= 0) {						
 							var member = cdaHeaderParts[0];
 							if(cdaHeaderParts.length > 1 || (member != "[Measures].[MeasuresLevel]" && $.inArray(member, myself.query.getPivotDimensionQualifiedNames()) < 0)) {
@@ -2828,14 +3221,14 @@ bt.components.BTable = function(spec) {
 								}
 							}
 							ht[levelQualifiedName] = member;
-			
+
 							if(hierarchy != previousHierarchy) {
 								previousHierarchy = hierarchy;
 								maxLevelDepth = myself.olapCube.getLevelDepth(levelQualifiedName);
 							}
-						
+
 						}
-						
+
 						//console.log("ht[" + levelQualifiedName + "] = " + ht[levelQualifiedName]);				
 					}
 
@@ -2855,14 +3248,14 @@ bt.components.BTable = function(spec) {
 									rightArr.push(el);								
 							}
 						});
-						
+
 						dimensions = leftArr.concat([[key, ""]], rightArr);
 					}
 					else {
 						$.each(dimensionQualifiedNames, function(i, v) {
 							filters.push([v, "include:[" + ht[v] + "]"]);
 						});
-						
+
 						var keyDepth = myself.olapCube.getLevelDepth(key);
 						var leftArr = [];
 						var rightArr = [];
@@ -2875,15 +3268,15 @@ bt.components.BTable = function(spec) {
 						});
 						dimensions = leftArr.concat([[key, ""]], rightArr);						
 					}
-					
+
 					//console.log(dimensions.toSource());
-					
+
 					//console.log("-----------------------------------------------------------");
 
 				}
-				
+
 				//console.log(filters.toSource());
-				
+
 				var currentDimensions = myself.query.getDimensions();
 				$.each(dimensions, function(i, v) {
 					var qn = v[0];
@@ -2894,7 +3287,7 @@ bt.components.BTable = function(spec) {
 						v[1] = d[0][1];
 					}
 				});
-				
+
 				//console.log(dimensions.toSource());
 
 				var currentPivotDimensions = myself.query.getPivotDimensions();
@@ -2907,11 +3300,11 @@ bt.components.BTable = function(spec) {
 						v[1] = d[0][1];
 					}
 				});
-				
+
 				//console.log(pivotDimensions.toSource());
 
 				var currentAllDimensions = currentDimensions.concat(currentPivotDimensions);
-				
+
 				$.each(filters, function(i, v) {
 					var qn = v[0];
 					if(v[1].indexOf("BT_TOTAL") > -1 || v[1].indexOf("undefined") > -1) {
@@ -2921,12 +3314,12 @@ bt.components.BTable = function(spec) {
 						v[1] = d[0][1];
 					}
 				});
-				
+
 				//console.log(filters.toSource());
 
-				
+
 				var querySetting = myself.query.getSettings();
-				
+
 				var BTableDrillProp = {};
 				BTableDrillProp.catalog = myself.properties.catalog;
 				BTableDrillProp.jndi = myself.properties.jndi;
@@ -2945,28 +3338,40 @@ bt.components.BTable = function(spec) {
 				BTableDrillProp.totalsPosition = querySetting.summary.position;
 				BTableDrillProp.hideSpans = myself.properties.hideSpans;
 				BTableDrillProp.drillTarget = myself.properties.drillTarget;
-				
+				BTableDrillProp.showAlarms = myself.properties.showAlarms;
+				BTableDrillProp.template = myself.properties.template;
+				BTableDrillProp.showTable = myself.properties.showTable;
+				BTableDrillProp.showZeros = myself.properties.showZeros;
+				BTableDrillProp.showToolbar = myself.properties.showToolbar;
+
 				//console.log(BTableDrillProp);
-				
+
 				var urlQuery = getURLQuery();
 
 				var url = bt.helpers.general.getRenderServiceUrl() + "?";
 				url += "btdef=" + encodeURIComponent(JSON.stringify(BTableDrillProp));
 				url += (urlQuery.hasOwnProperty("debug") && urlQuery.debug == "true") ? "&debug=true" : "";
-				
+				//Manage history
+				myself.query.saveInHistory();
+				var hstObjName = (0|Math.random()*9e6).toString(36);
+				url += "&history=" + hstObjName;
+				sessionStorage.setItem(hstObjName, myself.query.getHistory());
+				sessionStorage.setItem(hstObjName + "_FM", myself.query.getHstFM());
+				sessionStorage.setItem(hstObjName + "_OM", myself.query.getHstOM());
+
 				//console.log(url);
-				
+
 				if(myself.properties.drillTarget == "SELF")
 					window.open(url, "_self");
 				else if(myself.properties.drillTarget == "NEW_TAB" && typeof top.mantle_openTab !== "undefined")
 					top.mantle_openTab("BTable", "BTable", url);
 				else
 					window.open(url, "_blank");
-	        },
-	        items: menu
+			},
+			items: menu
 		}
 	};
-	
+
 	myself.buildDrillMenu = function() {
 		var allLevels = myself.olapCube.getLevels();
 		var queryDimensionLevels = myself.query.getDimensionQualifiedNames();
@@ -2975,28 +3380,28 @@ bt.components.BTable = function(spec) {
 		var newLevels = $.grep(allLevels, function(e, i) {
 			return queryLevels.indexOf(e.qualifiedName) < 0 && queryLevels.indexOf(e.qualifiedName.split("].[")[0] + "]") < 0;
 		});
-		
+
 		var invalidHierachies = _.uniq($.map(queryPivotLevels, function(e, i) {
 			return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 		}));
-		
+
 		//console.log(invalidHierachies);
-		
+
 		newLevels = $.grep(newLevels, function(e, i) {
 			return $.inArray(e.qualifiedName.split("].[")[0].substring(1), invalidHierachies) < 0;
 		});
-		
+
 		//console.log(newLevels);			
-		
+
 		var newLevelsAsObjects = $.map(newLevels, function(e, i) {
 			var qn = e.qualifiedName;
 			var qnParts = qn.split("].[");
 			var h = qnParts[0].substring(1);
 			var l = qnParts[1].substring(0, qnParts[1].length-1);
-			
+
 			return {hierarchy: h, level: l, qualifiedName: qn};
 		});
-					
+
 		var hierarchies = $.map(newLevelsAsObjects, function(e, i) {
 			return e.hierarchy;
 		});
@@ -3011,9 +3416,9 @@ bt.components.BTable = function(spec) {
 				comparison = 1;
 			return comparison;
 		});
-		
+
 		//console.log(hierarchies);
-		
+
 		var menuMatrix = [];
 		$.each(newLevelsAsObjects, function(i, v) {
 			var h = v.hierarchy;
@@ -3023,21 +3428,21 @@ bt.components.BTable = function(spec) {
 				menuMatrix[h] = [];
 			menuMatrix[h].push({name: l, qualifiedName: qn});
 		});
-		
+
 		//console.log(menuMatrix);
 
 		var axisLevels = myself.query.getDimensionQualifiedNames();			
 		var axisHierarchies = $.map(axisLevels, function(e, i) {
 			return e == "MEASURES" ? e : (e.indexOf("].[") < 0 ? e.substring(1, e.length-1) : e.split("].[")[0].substring(1));
 		});
-		
+
 		//console.log(axisHierarchies);
-		
+
 		var menu = {};
-				
+
 		$.each(hierarchies, function(i, hierarchy) {
 			var hierarchyCaption = myself.olapCube.getCaption("[" + hierarchy + "]");
-			
+
 			var levels = menuMatrix[hierarchy];
 			if(levels.length == 1 && myself.olapCube.getCaption(levels[0].qualifiedName) == hierarchyCaption) {
 				var newLevel = levels[0].qualifiedName;
@@ -3054,96 +3459,119 @@ bt.components.BTable = function(spec) {
 				});
 			}
 		});
-		
+
 		return menu;
 	}
-	
-	
- 	myself.buildNoDataContextMenu = function(target) {	  	
+
+
+	myself.buildNoDataContextMenu = function(target) {	  	
 		var menu = {};
-		
+
 		menu.title = {name: "<strong>" + $.i18n.prop("menu_no_data") + "</strong>", callback: function(key, options) {}};
+		menu.template={
+				name: "<i>" + $.i18n.prop("menu_item_template") +  myself.properties.template.substring(myself.properties.template.lastIndexOf("/")+1, myself.properties.template.lastIndexOf(".bttemplate"))+ "</i>",
+				callback: function(key, options) {
+					myself.loadTemplate();
+					//window.location.reload();
+					//Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "template"
+		};
 		menu.titlesep = "---";
-		
+
 		menu.filters = {
-			name: $.i18n.prop("menu_item_filters_manager"),
-			callback: function(key, options) {
-				myself.openFiltersSelectorPanel("");
-			}
+				name: $.i18n.prop("menu_item_filters_manager"),
+				callback: function(key, options) {
+					myself.openFiltersSelectorPanel("", "", "", "");
+				},
+				icon: "filters"
 		};
 
 		menu.toggleFilters = {
-            name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
-            callback: function() {
-            	myself.properties.showFilters = !myself.properties.showFilters;
-            	$("#" + myself.properties.filtersPanelHtmlObject).toggle();
-            }
-        };		
+				name: myself.properties.showFilters ? $.i18n.prop("menu_item_hide_filters_and_sorts") : $.i18n.prop("menu_item_show_filters_and_sorts"), 
+						callback: function() {
+							myself.properties.showFilters = !myself.properties.showFilters;
+							$("#" + myself.properties.filtersPanelHtmlObject).toggle();
+						},
+						icon: "filtersHide"
+		};		
+
+		menu.toggleToolbar = {
+				name: myself.properties.showToolbar ? $.i18n.prop("menu_item_hide_toolbar") : $.i18n.prop("menu_item_show_toolbar"), 
+						callback: function() {
+							myself.properties.showToolbar = !myself.properties.showToolbar;
+							$("#" + myself.properties.toolbarPanelHtmlObject).toggle();
+						},
+						icon: "toolbarHide"
+		};		
 
 		menu.settingssep = "---";
 		var settingsMenu = myself.buildSettingsMenu();
-		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items};
-		
+		menu.settings = {name: $.i18n.prop("menu_item_table_settings"), items: settingsMenu.items, icon: "tableOptions"};
+
 		menu.mdx = {
-			name: $.i18n.prop("menu_item_show_mdx"),
-			callback: function(key, options) {
-				var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
-				$.fancybox(html, {
-					'autoDimensions': true,
-					'overlayShow': true,
-					'hideOnOverlayClick': false,
-					'hideOnContentClick': false,
-					'enableEscapeButton': false,
-					'showCloseButton': true,
-				});
-			}			
+				name: $.i18n.prop("menu_item_show_mdx"),
+				callback: function(key, options) {
+					var html = "<div class='mdxPanel'>" + Dashboards.getParameterValue(myself.properties.componentName.replace("render_", "") + "MdxQuery") + "</div>";
+					$.fancybox(html, {
+						'autoDimensions': true,
+						'overlayShow': true,
+						'hideOnOverlayClick': false,
+						'hideOnContentClick': false,
+						'enableEscapeButton': false,
+						'showCloseButton': true,
+					});
+				},
+				icon: "mdx"			
 		}
 
 		menu.reset = {
-            name: $.i18n.prop("menu_item_reset"), 
-            callback: function() {
-            	myself.query.reset();
-            	Dashboards.getComponent(myself.properties.componentName).update();
-            }
-        };
+				name: $.i18n.prop("menu_item_reset"), 
+				callback: function() {
+					myself.query.reset();
+					Dashboards.getComponent(myself.properties.componentName).update();
+				},
+				icon: "reset"
+		};
 
 		menu.filesep = "---";
 
 		var openMenu = myself.buildOpenMenu();
-		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items};
+		menu.open = {name: $.i18n.prop("menu_item_open"), items: openMenu.items, icon: "openIn"};
 
 		var fileMenu = myself.buildFileMenu();
 		menu.file = {name: $.i18n.prop("menu_item_file"), items: fileMenu.items};
-		
+
 		menu.export2excel = {
-			name: $.i18n.prop("menu_item_export_to_excel"),
-			callback: function(key, options) {
-				myself.exportToExcel();
-			}
+				name: $.i18n.prop("menu_item_export_to_excel"),
+				callback: function(key, options) {
+					myself.exportToExcel();
+				},
+				icon: "excel"
 		};
-		
+
 		return {
-		    callback: function(key, options) {},
-		    items: menu
+			callback: function(key, options) {},
+			items: menu
 		};
 	};
-	
-	
+
+
 	/* End ContextMenu Functions */
-	
-	
+
+
 	myself.getBodyRowspans = function() {
 		var metadata = normalizedCdaResult.metadata;
 		var resultset = normalizedCdaResult.resultset;
-		
+
 		var querySettings = myself.query.getSettings();
 		var hasMoC = querySettings.measuresOnColumns;
 		var hasGrandTotal = querySettings.summary.grandTotal;
 		var hasSubTotals = querySettings.summary.subTotals;
 		var totalsAtTop = querySettings.summary.position == "top";
-		
+
 		var zippedRows = [];
-		
+
 		if(!myself.properties.hideSpans) {
 			var colNames = $.map(metadata, function(m){ return m.colName; });
 			var maxIdx = -1;
@@ -3167,7 +3595,7 @@ bt.components.BTable = function(spec) {
 				var count = 1;
 				var prevValue = len > 0 ? resultset[0][i] : "";
 				var start = 1;
-				
+
 				if(totalsAtTop && hasGrandTotal && prevValue != "") {
 					zippedRows[i].push({value: prevValue, rowspan: 1});
 					prevValue = resultset[1][i];
@@ -3193,31 +3621,31 @@ bt.components.BTable = function(spec) {
 				}
 			}
 		}
-		
+
 		return zippedRows;
 	}
-	
+
 	var setExportStyle = function(exportStyle) {
 		var defaultStyle = {
-			rules: [
-			   {selector: "table", properties: [{name: "border-collapse", value: "collapse"}]},
-			   {selector: "th", properties: [{name: "border", value: "1px solid #000"}, {name: "background-color", value: "#C3D9FF"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: "td", properties: [{name: "border", value: "1px solid #000"}]},
-			   {selector: "tbody tr.odd td", properties: [{name: "background-color", value: "#E2E4FF"}]},
-			   {selector: "tbody tr.even td", properties: [{name: "background-color", value: "#FFFFFF"}]},
-			   {selector: "td.string", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: "td.numeric", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: "td.subtotal", properties: [{name: "font-weight", value: "bold"}]},
-			   {selector: "tr.odd td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
-			   {selector: "tr.even td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
-			   {selector: ".filtersTitle", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "black"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: ".hierarchy", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: ".separator", properties: [{name: "font-weight", value: "normal"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: ".level", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "red"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
-			   {selector: ".filter", properties: [{name: "font-weight", value: "normal"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]}
-			]
+				rules: [
+				        {selector: "table", properties: [{name: "border-collapse", value: "collapse"}]},
+				        {selector: "th", properties: [{name: "border", value: "1px solid #000"}, {name: "background-color", value: "#C3D9FF"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: "td", properties: [{name: "border", value: "1px solid #000"}]},
+				        {selector: "tbody tr.odd td", properties: [{name: "background-color", value: "#E2E4FF"}]},
+				        {selector: "tbody tr.even td", properties: [{name: "background-color", value: "#FFFFFF"}]},
+				        {selector: "td.string", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: "td.numeric", properties: [{name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: "td.subtotal", properties: [{name: "font-weight", value: "bold"}]},
+				        {selector: "tr.odd td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
+				        {selector: "tr.even td.grandtotal", properties: [{name: "font-weight", value: "bold"}, {name: "background-color", value: "#C3D9FF"}]},
+				        {selector: ".filtersTitle", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "black"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: ".hierarchy", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: ".separator", properties: [{name: "font-weight", value: "normal"}, {name: "color", value: "blue"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: ".level", properties: [{name: "font-weight", value: "bold"}, {name: "color", value: "red"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]},
+				        {selector: ".filter", properties: [{name: "font-weight", value: "normal"}, {name: "font-family", value: "Arial, serif"}, {name: "font-size", value: "9pt"}]}
+				        ]
 		};
-		
+
 		var tmpDiv = $("#" + myself.properties.componentHtmlObject + "_eXtmp");
 		var rules = exportStyle.hasOwnProperty("rules") ? exportStyle.rules : defaultStyle.rules;
 		$.each(rules, function(i, v) {
@@ -3229,81 +3657,90 @@ bt.components.BTable = function(spec) {
 			}
 		});
 	}
-	
+
 	myself.exportToExcel = function() {
 		var html = $("#" + myself.properties.componentHtmlObject).html();
 		var tmpId = myself.properties.componentHtmlObject + "_eXtmp";
-	    var tmpObj = $("<div id='" + tmpId + "' style='display:none'>" + html + "</div>" );
-        $("#" + myself.properties.componentHtmlObject).after(tmpObj);
-        setExportStyle(myself.properties.exportStyle);
-        tmpObj.find("img").remove();
-        tmpObj.find("div[id$='_fixedHeader']").remove();
-	    var tmpHtml = tmpObj.html();
-	    tmpObj.remove();
-	    window.open("data:application/vnd.ms-excel," + encodeURIComponent(tmpHtml));
+		var tmpObj = $("<div id='" + tmpId + "' style='display:none'>" + html + "</div>" );
+		$("#" + myself.properties.componentHtmlObject).after(tmpObj);
+		setExportStyle(myself.properties.exportStyle);
+		tmpObj.find("img").remove();
+		tmpObj.find("div[id$='_fixedHeader']").remove();
+		var tmpHtml = tmpObj.html();
+		tmpObj.remove();
+		window.open("data:application/vnd.ms-excel," + encodeURIComponent(tmpHtml));
+		//window.open("data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet," + encodeURIComponent(tmpHtml));
 	}
-	
+
 
 	myself.buildFileMenu = function() {
 		var menu = {items: {}};
-		
+
 		var btfile = Dashboards.getQueryParameter("btfile");
 		var alreadySaved = btfile !== undefined && btfile != "";
-		
+
 		if(alreadySaved) {
 			menu.items.save = {
-                name: $.i18n.prop("menu_item_file_save"),
-                callback: function() {
-					var successCallback = function() {
-						$.prompt($.i18n.prop("save_message_success"), {
-							prefix: "popup", 
-							submit: function(v, m, f) {
-								$.prompt.close();
-								window.location.reload();
-							}
-						});
-					};
-					var permissionDeniedCallback = function() {
-						$.prompt($.i18n.prop("save_message_permission_denied"), {
-							prefix: "popup", 
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}
-						});
-					};
-					var errorCallback = function() {
-						$.prompt($.i18n.prop("save_message_error"), {
-							prefix: "popup", 
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}
-						});
-					};
-					
-					$.prompt($.i18n.prop("save_message_confirm_overwrite"), {
-						buttons: {
-							Ok: true,
-							Cancel: false
-						},
-						prefix: "popup",
-						callback: function(v, m, f) {
-							if (v) myself.save(btfile.substring(1), successCallback, permissionDeniedCallback, errorCallback);
-						}
-					});
-				}
+					name: $.i18n.prop("menu_item_file_save"),
+					callback: function() {
+						myself.saveCall();
+					},
+					icon: "save"
 			};		
 		}
-		
+
 		menu.items.saveAs = {
-			name: $.i18n.prop("menu_item_file_save_as"), 
-			callback: function() {
-				myself.saveAs();
-			}
+				name: $.i18n.prop("menu_item_file_save_as"), 
+				callback: function() {
+					myself.saveAs();
+				},
+				icon: "saveAs"
 		};
-		
+
 		return menu;
 	}
-	
+
+	myself.saveCall = function() {
+		var btfile = Dashboards.getQueryParameter("btfile");
+
+		var successCallback = function() {
+			$.prompt($.i18n.prop("save_message_success"), {
+				prefix: "popup", 
+				submit: function(e, v, m, f) {
+					$.prompt.close();
+					window.location.reload();
+				}
+			});
+		};
+		var permissionDeniedCallback = function() {
+			$.prompt($.i18n.prop("save_message_permission_denied"), {
+				prefix: "popup", 
+				submit: function(e, v, m, f) {
+					$.prompt.close();
+				}
+			});
+		};
+		var errorCallback = function() {
+			$.prompt($.i18n.prop("save_message_error"), {
+				prefix: "popup", 
+				submit: function(e, v, m, f) {
+					$.prompt.close();
+				}
+			});
+		};
+
+		$.prompt($.i18n.prop("save_message_confirm_overwrite"), {
+			buttons: {
+				Ok: true,
+				Cancel: false
+			},
+			prefix: "popup",
+			submit: function(e, v, m, f) {
+				if (v) myself.save(btfile.substring(1), successCallback, permissionDeniedCallback, errorCallback);
+			}
+		});
+
+	}
 	myself.saveAs = function() {
 		var selectedFile = "";
 		var	selectedFolder = "";
@@ -3321,132 +3758,132 @@ bt.components.BTable = function(spec) {
 		'                       </tr>'+
 		'                   </table>'+
 		'               </div>';
-		
+
 		var content = "<h2>" + $.i18n.prop("save_as_title") + "</h2><hr/><div>" + fileInfo + "</div>";
-		
+
 		$.prompt(content, {
-		  prefix: "popup",
-		  buttons: {
-			Ok: 1,
-			Cancel: 0
-		  },
-		  loaded: function() {
+			prefix: "popup",
+			buttons: {
+				Ok: 1,
+				Cancel: 0
+			},
+			loaded: function() {
 
-			$('#container_id').fileTree({
-			  root: '/',
-			  script: bt.helpers.general.getExploreRepositoryServiceUrl(),
-			  expandSpeed: 1000,
-			  collapseSpeed: 1000,
-			  multiFolder: false,
-			  folderClick: function(obj, folder) {
-				if ($(".selectedFolder").length > 0) $(".selectedFolder").attr("class", "");
-				$(obj).attr("class", "selectedFolder");
-				selectedFolder = folder;
-				$("#fileInput").val("");
-			  }
-			}, function(file) {
-			  $("#fileInput").val(file.replace(selectedFolder, ""));
-			  selectedFile = $("#fileInput").val();
-			});
-		  },
-		  submit: function(v, m, f) {
-			if (v == 1) {
-				selectedFile = $('#fileInput').val();
-				
-				var validInputs = true;
-				
-				if (selectedFile.indexOf(".") != -1 && (selectedFile.length < 7 || selectedFile.lastIndexOf(".btable") != selectedFile.length - 7)) {
-				  $.prompt($.i18n.prop("save_as_message_invalid_file_extension"), {
-					prefix: "popup"
-				  });
-				  validInputs = false;
-				} else if (selectedFolder.length == 0) {
-				  $.prompt($.i18n.prop("save_as_message_no_folder_selected"), {
-					prefix: "popup"
-				  });
-				  validInputs = false;
-				} else if (selectedFile.length == 0) {
-				  $.prompt($.i18n.prop("save_as_message_no_file_name_entered"), {
-					prefix: "popup"
-				  });
-				  validInputs = false;
-				}
-
-				if(validInputs) {
-					if (selectedFile.indexOf(".btable") == -1) selectedFile += ".btable";
-					
-					var i18nFileName = [];
-					i18nFileName.push(selectedFile);
-					
-					var filePath = selectedFolder + selectedFile;
-					
-					var successCallback = function() {
-						$.prompt.close();
-						$.prompt($.i18n.prop("save_as_message_success", i18nFileName), {
-							prefix: "popup"/*,
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}*/
-						});
-					};
-					var successOverwriteCallback = function() {
-						$.prompt.close();
-						$.prompt($.i18n.prop("save_as_message_success_overwrite", i18nFileName), {
-							prefix: "popup"/*,
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}*/
-						});
-					};
-					var permissionDeniedCallback = function() {
-						$.prompt.close();
-						$.prompt($.i18n.prop("save_as_message_permission_denied", i18nFileName), {
-							prefix: "popup"/*,
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}*/							
-						});
-					};					
-					var errorCallback = function() {
-						$.prompt.close();
-						$.prompt($.i18n.prop("save_as_message_error", i18nFileName), {
-							prefix: "popup"/*,
-							submit: function(v, m, f) {
-								$.prompt.close();
-							}*/							
-						});
-					};					
-					
-					var fileExists = false;
-					$("li.file.ext_btable a").each(function(i) {
-						fileExists = $(this).text() === selectedFile;
-						return !fileExists;
-					});
-					if(fileExists) {
-						$.prompt($.i18n.prop("save_as_message_confirm_overwrite", i18nFileName), {
-						  buttons: {
-							Ok: true,
-							Cancel: false
-						  },
-						  prefix: "popup",
-						  callback: function(v, m, f) {
-							if (v) myself.save(filePath, successOverwriteCallback, permissionDeniedCallback, errorCallback);
-						  }
-						});
-					} else {
-						myself.save(filePath, successCallback, permissionDeniedCallback, errorCallback);
+				$('#container_id').fileTree({
+					root: '/',
+					script: bt.helpers.general.getExploreRepositoryServiceUrl(),
+					expandSpeed: 1000,
+					collapseSpeed: 1000,
+					multiFolder: false,
+					folderClick: function(obj, folder) {
+						if ($(".selectedFolder").length > 0) $(".selectedFolder").attr("class", "");
+						$(obj).attr("class", "selectedFolder");
+						selectedFolder = folder;
+						$("#fileInput").val("");
 					}
-				}
+				}, function(file) {
+					$("#fileInput").val(file.replace(selectedFolder, ""));
+					selectedFile = $("#fileInput").val();
+				});
+			},
+			submit: function(e, v, m, f) {
+				if (v == 1) {
+					selectedFile = $('#fileInput').val();
 
-			  return false;
+					var validInputs = true;
+
+					if (selectedFile.indexOf(".") != -1 && (selectedFile.length < 7 || selectedFile.lastIndexOf(".btable") != selectedFile.length - 7)) {
+						$.prompt($.i18n.prop("save_as_message_invalid_file_extension"), {
+							prefix: "popup"
+						});
+						validInputs = false;
+					} else if (selectedFolder.length == 0) {
+						$.prompt($.i18n.prop("save_as_message_no_folder_selected"), {
+							prefix: "popup"
+						});
+						validInputs = false;
+					} else if (selectedFile.length == 0) {
+						$.prompt($.i18n.prop("save_as_message_no_file_name_entered"), {
+							prefix: "popup"
+						});
+						validInputs = false;
+					}
+
+					if(validInputs) {
+						if (selectedFile.indexOf(".btable") == -1) selectedFile += ".btable";
+
+						var i18nFileName = [];
+						i18nFileName.push(selectedFile);
+
+						var filePath = selectedFolder + selectedFile;
+
+						var successCallback = function() {
+							$.prompt.close();
+							$.prompt($.i18n.prop("save_as_message_success", i18nFileName), {
+								prefix: "popup"/*,
+							submit: function(e, v, m, f) {
+								$.prompt.close();
+							}*/
+							});
+						};
+						var successOverwriteCallback = function() {
+							$.prompt.close();
+							$.prompt($.i18n.prop("save_as_message_success_overwrite", i18nFileName), {
+								prefix: "popup"/*,
+							submit: function(e, v, m, f) {
+								$.prompt.close();
+							}*/
+							});
+						};
+						var permissionDeniedCallback = function() {
+							$.prompt.close();
+							$.prompt($.i18n.prop("save_as_message_permission_denied", i18nFileName), {
+								prefix: "popup"/*,
+							submit: function(e, v, m, f) {
+								$.prompt.close();
+							}*/							
+							});
+						};					
+						var errorCallback = function() {
+							$.prompt.close();
+							$.prompt($.i18n.prop("save_as_message_error", i18nFileName), {
+								prefix: "popup"/*,
+							submit: function(e, v, m, f) {
+								$.prompt.close();
+							}*/							
+							});
+						};					
+
+						var fileExists = false;
+						$("li.file.ext_btable a").each(function(i) {
+							fileExists = $(this).text() === selectedFile;
+							return !fileExists;
+						});
+						if(fileExists) {
+							$.prompt($.i18n.prop("save_as_message_confirm_overwrite", i18nFileName), {
+								buttons: {
+									Ok: true,
+									Cancel: false
+								},
+								prefix: "popup",
+								submit: function(e, v, m, f) {
+									if (v) myself.save(filePath, successOverwriteCallback, permissionDeniedCallback, errorCallback);
+								}
+							});
+						} else {
+							myself.save(filePath, successCallback, permissionDeniedCallback, errorCallback);
+						}
+					}
+
+					return false;
+				}
 			}
-		  }
 		});
 	}
 
 	myself.save = function(selectedFile, successCallback, permissionDeniedCallback, errorCallback) {		
 		var querySetting = myself.query.getSettings();
-		
+
 		var BTableObj = {};
 		BTableObj.catalog = myself.properties.catalog;
 		BTableObj.jndi = myself.properties.jndi;
@@ -3455,6 +3892,8 @@ bt.components.BTable = function(spec) {
 		BTableObj.measures = myself.query.getMeasures();
 		BTableObj.pivotDimensions = myself.query.getPivotDimensions();
 		BTableObj.filters = myself.query.getFilters();
+		BTableObj.orderBy = myself.query.getOrders();
+		BTableObj.pivotDimensions = myself.query.getPivotDimensions();
 		BTableObj.measuresOnColumns = querySetting.measuresOnColumns;
 		BTableObj.nonEmptyRows = querySetting.nonEmpty.rows;
 		BTableObj.nonEmptyColumns = querySetting.nonEmpty.columns;
@@ -3464,10 +3903,15 @@ bt.components.BTable = function(spec) {
 		BTableObj.pivotSubTotals = querySetting.summary.pivotSubTotals;
 		BTableObj.totalsPosition = querySetting.summary.position;
 		BTableObj.hideSpans = myself.properties.hideSpans;
-						
+		BTableObj.showAlarms = myself.properties.showAlarms;
+		BTableObj.template = myself.properties.template;
+		BTableObj.showTable = myself.properties.showTable;
+		BTableObj.showZeros = myself.properties.showZeros;
+		BTableObj.showToolbar = myself.properties.showToolbar;
+
 		var saveParams = {
-			path: selectedFile,
-			btdef: JSON.stringify(BTableObj, "", 1)
+				path: selectedFile,
+				btdef: JSON.stringify(BTableObj, "", 1)
 		};
 
 		var $uploadForm = $('<form action="' + bt.helpers.general.getSaveFileServiceUrl() + '" method="post" enctype="multipart/form-data">');
@@ -3490,31 +3934,31 @@ bt.components.BTable = function(spec) {
 		});
 		$uploadForm.submit();
 	}
-	
+
 	myself.buildOpenMenu = function() {
 		var menu = {items: {}};
-		
+
 		if(typeof top.mantle_openTab !== "undefined") {
 			menu.items.newTab = {
-				name: $.i18n.prop("menu_item_open_in_new_tab"),
-				callback: function(key, options) {
-					myself.open("NEW_TAB");
-				}
+					name: $.i18n.prop("menu_item_open_in_new_tab"),
+					callback: function(key, options) {
+						myself.open("NEW_TAB");
+					}
 			};
 		}
 		menu.items.newWindow = {
-			name: $.i18n.prop("menu_item_open_in_new_window"),
-			callback: function(key, options) {
-				myself.open("NEW_WINDOW");
-			}
+				name: $.i18n.prop("menu_item_open_in_new_window"),
+				callback: function(key, options) {
+					myself.open("NEW_WINDOW");
+				}
 		};
-		
+
 		return menu;
 	}	
-	
+
 	myself.open = function(target) {		
 		var querySetting = myself.query.getSettings();
-		
+
 		var BTableObj = {};
 		BTableObj.catalog = myself.properties.catalog;
 		BTableObj.jndi = myself.properties.jndi;
@@ -3533,18 +3977,127 @@ bt.components.BTable = function(spec) {
 		BTableObj.totalsPosition = querySetting.summary.position;
 		BTableObj.hideSpans = myself.properties.hideSpans;
 		BTableObj.drillTarget = myself.properties.drillTarget;
-					
+		BTableObj.showAlarms = myself.properties.showAlarms;
+		BTableObj.template = myself.properties.template;
+		BTableObj.showTable = myself.properties.showTable;
+		BTableObj.showZeros = myself.properties.showZeros;
+		BTableObj.showToolbar = myself.properties.showToolbar;
+
 		var urlQuery = getURLQuery();
 
 		var url = bt.helpers.general.getRenderServiceUrl() + "?";
 		url += "btdef=" + encodeURIComponent(JSON.stringify(BTableObj));
 		url += (urlQuery.hasOwnProperty("debug") && urlQuery.debug == "true") ? "&debug=true" : "";
-					
+		//Manage history
+		myself.query.saveInHistory();
+		var hstObjName = (0|Math.random()*9e6).toString(36);
+		url += "&history=" + hstObjName;
+		sessionStorage.setItem(hstObjName, myself.query.getHistory());
+		sessionStorage.setItem(hstObjName + "_FM", myself.query.getHstFM());
+		sessionStorage.setItem(hstObjName + "_OM", myself.query.getHstOM());
+
 		if(target == "NEW_TAB")
 			top.mantle_openTab("BTable", "BTable", url);
 		else if(target == "NEW_WINDOW")
 			window.open(url, "_blank");
 	}
-	
+
+	myself.loadTemplate = function() {
+		var selectedFile = "";
+		var	selectedFolder = "";
+
+		var fileInfo = '<div id="container_id" class="folderexplorer" style="height:260px;"></div>' +
+		'               <div style="padding-top:15px;">' +
+		'                   <table style="margin:0px">'+
+		'                       <tr>'+
+		'                           <td style="padding:0px; width:22%">'+
+		'                               <span class="folderexplorerfilelabel" style="font-size:11px; font-weight:bold; left:0px; top:-3px">' + $.i18n.prop("load_template_label_file_name") + ' *</span>' +
+		'                           </td>'+
+		'                           <td style="padding:0px">'+
+		'                               <input id="fileInput" type="text" value=""></input>' +
+		'                           </td>'+
+		'                       </tr>'+
+		'                   </table>'+
+		'               </div>';
+
+		var content = "<h2>" + $.i18n.prop("load_template") + "</h2><hr/><div>" + fileInfo + "</div>";
+
+		$.prompt(content, {
+			prefix: "popup",
+			buttons: {
+				Ok: 1,
+				Cancel: 0,
+				Delete: 2
+			},
+			loaded: function() {
+
+				$('#container_id').fileTree({
+					root: '/',
+					script: bt.helpers.general.getExploreTemplateRepositoryServiceUrl(),
+					expandSpeed: 1000,
+					collapseSpeed: 1000,
+					multiFolder: false,
+					folderClick: function(obj, folder) {
+						if ($(".selectedFolder").length > 0) $(".selectedFolder").attr("class", "");
+						$(obj).attr("class", "selectedFolder");
+						selectedFolder = folder;
+						$("#fileInput").val("");
+					}
+				}, function(file) {
+					$("#fileInput").val(file.replace(selectedFolder, ""));
+					selectedFile = $("#fileInput").val();
+				});
+			},
+			submit: function(e, v, m, f) {
+				if (v == 1) {
+					selectedFile = $('#fileInput').val();
+
+					var validInputs = true;
+
+					if (selectedFile.indexOf(".") != -1 && (selectedFile.length < 11 || selectedFile.lastIndexOf(".bttemplate") != selectedFile.length - 11)) {
+						$.prompt($.i18n.prop("load_template_message_invalid_file_extension"), {
+							prefix: "popup"
+						});
+						validInputs = false;
+					} else if (selectedFolder.length == 0) {
+						$.prompt($.i18n.prop("load_template_message_no_folder_selected"), {
+							prefix: "popup"
+						});
+						validInputs = false;
+					} 
+
+					if(validInputs) {
+						var i18nFileName = [];
+						i18nFileName.push(selectedFile.replace(".bttemplate",""));
+
+						var filePath = selectedFolder + selectedFile;
+
+						myself.properties.template = "/" + filePath;
+						myself.properties.updateTemplate = true;
+						$.prompt.close();
+						$.prompt($.i18n.prop("load_template_message_success", i18nFileName), {
+							prefix: "popup"/*,
+						submit: function(e, v, m, f) {
+							$.prompt.close();
+						}*/
+						});
+						Dashboards.getComponent(myself.properties.componentName).update();
+					}
+
+					return false;
+				} else if (v=2) {
+					myself.properties.template = "";
+					myself.properties.updateTemplate = true;
+					$.prompt.close();
+					$.prompt($.i18n.prop("load_template_message_delete_success", i18nFileName), {
+						prefix: "popup"
+					});
+					Dashboards.getComponent(myself.properties.componentName).update();
+					return false;
+				}
+			}
+		});
+	}
+
 	return myself;
 }

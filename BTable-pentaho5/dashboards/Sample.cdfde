@@ -676,6 +676,51 @@
       "type": "Boolean"
      },
      {
+      "name": "file",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "tableSettingsFromFile",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "hideSpans",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "fixedHeader",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "showAlarms",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "alarms",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "template",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "showTable",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "showZeros",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
       "name": "listeners",
       "value": "['${p:territory}']",
       "type": "Listeners"
@@ -908,5 +953,5 @@
    }
   ]
  },
- "filename": "/system/btable/dashboards/Sample.cdfde"
+ "filename": "/system/BTable/dashboards/Sample.cdfde"
 }

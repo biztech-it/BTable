@@ -12,17 +12,10 @@
 		<echo></echo>
 		<echo>TARGETS:</echo>
 		<echo></echo>
-		<echo>* copy-common-to-pentaho</echo>
-		<echo></echo>
 		<echo>* copy-common-to-pentaho5</echo>
 		<echo></echo>
 		<echo>* copy-common</echo>
-		<echo>    1) copy-common-to-pentaho</echo>
-		<echo>    2) copy-common-to-pentaho5</echo>
-		<echo></echo>
-		<echo>* dist-pentaho</echo>
-		<echo>    1) copy-common-to-pentaho</echo>
-		<echo>    2) BTable-pentaho/build.xml -> dist</echo>
+		<echo>    1) copy-common-to-pentaho5</echo>
 		<echo></echo>
 		<echo>* dist-pentaho5</echo>
 		<echo>    1) copy-common-to-pentaho5</echo>
@@ -31,24 +24,8 @@
 		<echo>* dist</echo>
 		<echo>    1) copy-common</echo>
 		<echo>    2) dist-pentaho</echo>
-		<echo>    3) dist-pentaho5</echo>
 	</target>
 	
-    <target name="copy-common-to-pentaho">
-		<copy todir="BTable-pentaho" failonerror="true" overwrite="true">
-			<fileset dir="BTable-common">
-				<include name="**/*" />
-			</fileset>
-		</copy>
-		<copy todir="BTable-pentaho" failonerror="true" overwrite="true">
-			<fileset dir=".">
-				<include name="CHANGELOG.txt" />
-				<include name="LICENSE.txt" />
-				<include name="README.md" />
-			</fileset>
-		</copy>
-	</target>
-
     <target name="copy-common-to-pentaho5">
 		<copy todir="BTable-pentaho5" failonerror="true" overwrite="true">
 			<fileset dir="BTable-common">
@@ -65,20 +42,14 @@
     </target>
 	
     <target name="copy-common">
-        <ant target="copy-common-to-pentaho" />
         <ant target="copy-common-to-pentaho5" />
     </target>
 
-    <target name="dist-pentaho" depends="copy-common-to-pentaho">
-		<ant dir="BTable-pentaho" antfile="build.xml" target="dist" inheritAll="true"/>
-    </target>
-	
     <target name="dist-pentaho5" depends="copy-common-to-pentaho5">
 		<ant dir="BTable-pentaho5" antfile="build.xml" target="dist" inheritAll="true"/>
     </target>
 
     <target name="dist" depends="copy-common">
-		<ant target="dist-pentaho" />
         <ant target="dist-pentaho5" />
     </target>	
 </project>

@@ -1,4 +1,5 @@
 /*!
+/*!
  * jQuery contextMenu - Plugin for simple contextMenu handling
  *
  * Version: git-master
@@ -96,6 +97,24 @@
 .context-menu-item.icon-delete { background-image: url(images/page_white_delete.png); }
 .context-menu-item.icon-add { background-image: url(images/page_white_add.png); }
 .context-menu-item.icon-quit { background-image: url(images/door.png); }
+/* icons for BTable */
+.context-menu-item.icon-add { background-image: url(images/add.png); }
+.context-menu-item.icon-delete { background-image: url(images/delete.png); }
+.context-menu-item.icon-excel { background-image: url(images/excel.png); }
+.context-menu-item.icon-filter{ background-image: url(images/filter.png); }
+.context-menu-item.icon-filterHide{ background-image: url(images/filterHide.png); }
+.context-menu-item.icon-mdx{ background-image: url(images/mdx.png); }
+.context-menu-item.icon-openIn { background-image: url(images/openIn.png); }
+.context-menu-item.icon-pivot{ background-image: url(images/pivot.png); }
+.context-menu-item.icon-reset { background-image: url(images/reset.png); }
+.context-menu-item.icon-save { background-image: url(images/save.png); }
+.context-menu-item.icon-saveAs{ background-image: url(images/saveAs.png); }
+.context-menu-item.icon-template{ background-image: url(images/template.png); }
+.context-menu-item.icon-sort{ background-image: url(images/sort.png); }
+.context-menu-item.icon-tableOptions{ background-image: url(images/tableOptions.png); }
+.context-menu-item.icon-change{ background-image: url(images/change.png); }
+.context-menu-item.icon-drill{ background-image: url(images/drill.png); }
+.context-menu-item.icon-back{ background-image: url(images/back.png); }
 
 /* vertically align inside labels */
 .context-menu-input > label > * { vertical-align: top; }

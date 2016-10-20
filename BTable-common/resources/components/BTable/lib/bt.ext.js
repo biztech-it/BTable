@@ -66,7 +66,12 @@ bt.ext.openBTable = function(spec) {
 		pivotSubTotals: false,
 		totalsPosition: "bottom",
 		hideSpans: false,
-		drillTarget: "SELF"
+		drillTarget: "SELF",
+		showAlarms: true,
+		template:"",
+		showTable: true,
+		showZeros: false,
+		showToolbar: false
 	};
 
 	var prop = $.extend({}, def, spec);	

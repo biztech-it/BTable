@@ -1,5 +1,19 @@
 CHANGELOG
 ---------
+v6.1 [2016.10.20]
+
+	NEW FEATURES:
+		* Values in one filter combo are filtered by other filters selections
+        * Added Template management: User can change alarms logic
+        * Added Show Alarms option: Display alarms or not
+		* Added Show Zeros option: Not just show nulls
+		* Added Show Table option: Use BTable filters for other dashboard components
+		* Added Endpoint support: Now the openFiltersSelectorPanel method can take one endpoint as parameter
+		* Added Menu Icons and Toolbar
+		* Added Navigation History support: Home and Back buttons
+
+	BUG FIXES:
+
 
 v2.1 [2014.06.10]
 

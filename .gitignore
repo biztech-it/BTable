@@ -13,36 +13,6 @@
 
 *Thumbs.db
 
-BTable-pentaho/bin/
-BTable-pentaho/dist/
-BTable-pentaho/runtime-lib/
-BTable-pentaho/test-lib/
-
-BTable-pentaho/dashboards/About.*
-BTable-pentaho/dashboards/Render.*
-
-BTable-pentaho/endpoints/kettle/getPluginVersion.ktr
-BTable-pentaho/endpoints/kettle/listCdaDatasources.ktr
-
-BTable-pentaho/resources/components/
-!BTable-pentaho/resources/components/BTable/lib/bt.helpers.js
-BTable-pentaho/resources/lang/
-
-BTable-pentaho/solution/BTable From File*
-
-BTable-pentaho4/src/it/biztech/btable/util/Utils.java
-BTable-pentaho4/src/it/biztech/btable/AccessFileException.java
-BTable-pentaho4/src/it/biztech/btable/BTableDefinition.java
-BTable-pentaho4/src/it/biztech/btable/WritingFileException.java
-
-BTable-pentaho/static/custom/css/
-BTable-pentaho/static/custom/img/
-BTable-pentaho/static/system/img/
-
-BTable-pentaho/CHANGELOG.txt
-BTable-pentaho/LICENSE.txt
-BTable-pentaho/README.md
-
 
 BTable-pentaho5/bin/
 BTable-pentaho5/dist/

@@ -198,6 +198,36 @@
       "type": "Boolean"
      },
      {
+      "name": "showAlarms",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "alarms",
+      "value": "[]",
+      "type": "ValuesArray"
+     },
+     {
+      "name": "template",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "showTable",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "showZeros",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "showToolbar",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
       "name": "listeners",
       "value": "[]",
       "type": "Listeners"
@@ -294,7 +324,7 @@
      },
      {
       "name": "preExecution",
-      "value": "function() {\n    var urlQuery = getURLQuery();\n    var btfile = urlQuery.btfile;\n    \n    if(btfile) {\n        this.file = btfile;\n        this.tableSettingsFromFile = true;\n        this.drillTarget = \"SELF\";\n    } else {\n        var btdef = urlQuery.btdef;\n        \n        if(urlQuery.btdef) {\n            var btdefObj = JSON.parse(urlQuery.btdef);\n    \n            this.catalog = (btdefObj.catalog) ? btdefObj.catalog : \"\";\n            this.jndi = (btdefObj.jndi) ? btdefObj.jndi : \"\";\n            this.cube = (btdefObj.cube) ? btdefObj.cube : \"\";\n            this.dimensions = (btdefObj.dimensions) ? btdefObj.dimensions : [];\n            this.measures = (btdefObj.measures) ? btdefObj.measures : [];\n            this.pivotDimensions = (btdefObj.pivotDimensions) ? btdefObj.pivotDimensions : [];\n            this.filters = (btdefObj.filters) ? btdefObj.filters : [];\n            this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;\n            this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;\n            this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;\n            this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;\n            this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;\n            this.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;\n            this.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;\n        \tthis.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : \"bottom\";\n        \tthis.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;\n            this.drillTarget = (btdefObj.hasOwnProperty('drillTarget')) ? btdefObj.drillTarget : \"SELF\";\n        }\n    }\n    \n    this.renderDashboard = true;\n    \n    return true;\n}",
+      "value": "function() {\n    var urlQuery = getURLQuery();\n    var btfile = urlQuery.btfile;\n    \n    if(btfile) {\n        this.file = btfile;\n        this.tableSettingsFromFile = true;\n        this.drillTarget = \"SELF\";\n    } else {\n        var btdef = urlQuery.btdef;\n        \n        if(urlQuery.btdef) {\n            var btdefObj = JSON.parse(urlQuery.btdef);\n    \n            this.catalog = (btdefObj.catalog) ? btdefObj.catalog : \"\";\n            this.jndi = (btdefObj.jndi) ? btdefObj.jndi : \"\";\n            this.cube = (btdefObj.cube) ? btdefObj.cube : \"\";\n            this.dimensions = (btdefObj.dimensions) ? btdefObj.dimensions : [];\n            this.measures = (btdefObj.measures) ? btdefObj.measures : [];\n            this.pivotDimensions = (btdefObj.pivotDimensions) ? btdefObj.pivotDimensions : [];\n            this.filters = (btdefObj.filters) ? btdefObj.filters : [];\n            this.measuresOnColumns = (btdefObj.hasOwnProperty('measuresOnColumns')) ? btdefObj.measuresOnColumns : true;\n            this.nonEmptyRows = (btdefObj.hasOwnProperty('nonEmptyRows')) ? btdefObj.nonEmptyRows : true;\n            this.nonEmptyColumns = (btdefObj.hasOwnProperty('nonEmptyColumns')) ? btdefObj.nonEmptyColumns : true;\n            this.grandTotal = (btdefObj.hasOwnProperty('grandTotal')) ? btdefObj.grandTotal : false;\n            this.subTotals = (btdefObj.hasOwnProperty('subTotals')) ? btdefObj.subTotals : false;\n            this.pivotGrandTotal = (btdefObj.hasOwnProperty('pivotGrandTotal')) ? btdefObj.pivotGrandTotal : false;\n            this.pivotSubTotals = (btdefObj.hasOwnProperty('pivotSubTotals')) ? btdefObj.pivotSubTotals : false;\n        \tthis.totalsPosition = (btdefObj.hasOwnProperty('totalsPosition')) ? btdefObj.totalsPosition : \"bottom\";\n        \tthis.hideSpans = (btdefObj.hasOwnProperty('hideSpans')) ? btdefObj.hideSpans : false;\n            this.drillTarget = (btdefObj.hasOwnProperty('drillTarget')) ? btdefObj.drillTarget : \"SELF\";\n            this.showAlarms = (btdefObj.hasOwnProperty('showAlarms')) ? btdefObj.showAlarms : true;\n            this.template = (btdefObj.hasOwnProperty('template')) ? btdefObj.template : \"\";\n            this.showTable = (btdefObj.hasOwnProperty('showTable')) ? btdefObj.showTable : true;\n            this.showZeros = (btdefObj.hasOwnProperty('showZeros')) ? btdefObj.showZeros : false;\n            this.showToolbar = (btdefObj.hasOwnProperty('showToolbar')) ? btdefObj.showToolbar : false;\n        }\n    }\n    \n    this.renderDashboard = true;\n    \n    return true;\n} ",
       "type": "JavaScript"
      },
      {

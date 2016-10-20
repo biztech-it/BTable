@@ -49,6 +49,8 @@ bt.Query = function(properties, olapCube) {
     var settings = $.extend({}, defaults, properties);
 
     var history = [];
+    var hstFM = [];
+    var hstOM = [];
 
     var definition = {
     	cube: settings.cube,
@@ -58,8 +60,40 @@ bt.Query = function(properties, olapCube) {
     	filters: settings.filters,
         orders: settings.orders
     }
+    
+    var extMeasurePH = {
+    	    "$PercTot": {
+    	        "formula": "(§M/ SUM(§AllRowsSetNoTotals ,  §M))",
+    	        "caption": "§M %",
+    	        "format": "0.00%"
+    	    },
+    	    "$PercLastDim": {
+    	        "formula": "(§M/ SUM(§AllRowsSetNoLastDim ,  §M))",
+    	        "caption": "§M %",
+    	        "format": "0.00%"
+    	    }
 
-	// If a hierarchy is found in both filters and dimensions, it moves the filtered levels of that hierarchy from filters to dimensions
+    	}
+    
+    var measuresAttr = [];
+
+    myself.loadMeasuresAttr = function() {
+    	$.each(definition.measures, function(i, v) {
+    		measuresAttr[i] = {};
+    		if (v[1] != "") {
+				measuresAttr[i] = v[1].substring(0,1) == "$" ? extMeasurePH[v[1]] : JSON.parse(v[1]);
+				measuresAttr[i] = JSON.parse(JSON.stringify(measuresAttr[i]).replace(/§M/g,v[0]));
+    		}
+      	});
+    }
+    
+    myself.loadMeasuresAttr();
+    
+    myself.getMeasuresAttr = function() {
+    	return measuresAttr;
+    }
+
+    // If a hierarchy is found in both filters and dimensions, it moves the filtered levels of that hierarchy from filters to dimensions
 	var normalizeDefinition = function() {
 		var hierarchiesInDimensions = $.map(definition.dimensions, function(e, i) { return (e[0].split("].[")[0] + "]").replace("]]", "]"); });
 		var hierarchiesInPivotDimensions = $.map(definition.pivotDimensions, function(e, i) { return (e[0].split("].[")[0] + "]").replace("]]", "]"); });
@@ -115,25 +149,7 @@ bt.Query = function(properties, olapCube) {
 		definition.filters = newFilters;
 	}();
 	
-    myself.saveInHistory = function() {
-    	var def = $.extend(true, {}, definition);
-    	history.push(def);
-    }
-
-    myself.saveInHistory();
-
-    myself.reset = function() {
-    	definition = $.extend(true, {}, history[0]);
-
-        initializeFiltersMap(definition.dimensions);
-        initializeFiltersMap(definition.pivotDimensions);
-        initializeFiltersMap(definition.filters);
-
-        filtersMap.synchronizedByParameters = true;
-
-        initializeOrdersMap();
-    }
-
+    
     myself.validate = function(olapCube) {
         // At least one dimension and one measure!
         // No measures in filter!
@@ -342,7 +358,20 @@ bt.Query = function(properties, olapCube) {
         	return mdx;
         }
 
-    	var mdx = [];
+        var getMdxCrossjoinsNoLastDim = function(sets) {
+        	var mdx = "";
+        	if(sets.length > 0) {
+                var _sets = sets.slice();
+            	if(_sets.length == 1) {
+            	    mdx = _sets[0];
+            	} else {
+            	    mdx = "Crossjoin(" + _sets.shift() + ", " + getMdxCrossjoins(_sets) + ")";
+            	}        		
+        	}
+        	return mdx;
+        }
+
+        var mdx = [];
     	mdx["members"] = [];
     	mdx["sets"] = [];
     	mdx["columns"] = "";
@@ -351,8 +380,11 @@ bt.Query = function(properties, olapCube) {
     	mdx["slicer"] = "";
 
     	var mdxSets = [];
+    	var mdxSetsNoTotals = [];
 		var mdxTotalMembers = [];
 		var mdxAxis = "";
+		var mdxAxisNoTotals = "";
+		var mdxAxisNoTotalsNoLastDim = "";
 
 		$.each(dimensionHierarchies, function(i, hierarchy) {
 			var lastLevel = hierarchy.levels[hierarchy.levels.length-1];
@@ -407,6 +439,8 @@ bt.Query = function(properties, olapCube) {
 			if(hierarchy.levels.length > 1)
 				mdxHierarchySet = "Descendants(" + mdxHierarchySet + ", " + lastLevel.qualifiedName + ", SELF)";
 
+			mdxSetsNoTotals.push(mdxHierarchySet);
+			
 			if(settings.summary.subTotals && i > 0 && i == dimensionHierarchies.length - 1 && !ordersMap.axes.hasOwnProperty("dimensions")) {
 				if(settings.summary.position == "top")
 					mdxHierarchySet = "Union([" + hierarchy.name + "].[BT_TOTAL], " + mdxHierarchySet + ")";
@@ -447,16 +481,32 @@ bt.Query = function(properties, olapCube) {
 				mdxAxis = "Union(" + mdxAxis + ", " + getMdxCrossjoins(mdxTotalMembers) + ")";
 		}
 
+		mdxAxisNoTotals = getMdxCrossjoins(mdxSetsNoTotals);
+		var mdxSetsNoTotalsNoLastDim = mdxSetsNoTotals.slice(); 
+		if (mdxSetsNoTotalsNoLastDim.length > 1)	
+			mdxSetsNoTotalsNoLastDim.pop(); 
+		mdxAxisNoTotalsNoLastDim = getMdxCrossjoins(mdxSetsNoTotalsNoLastDim);
+		
+		
 		if(settings.measuresOnColumns)
 			mdx["rows"] = mdxAxis;
 		else
 			mdx["columns"] = mdxAxis;
 
-
+		
+		var mdxMeasuresAsMembers="";
 		var mdxMeasuresSet = "{";
     	$.each(definition.measures, function(i, v) {
-     		 if(i > 0) mdxMeasuresSet += ", ";
-     		 	mdxMeasuresSet += v[0];
+    		if (v[1].substring(0,1) == "") {
+        		mdxMeasuresAsMembers += " Member [Measures].[Measure" + i + "] As '("+ v[0]+")'";
+    		} else {
+        		mdxMeasuresAsMembers += " Member [Measures].[Measure" + i + "] As '" + measuresAttr[i]["formula"] + "'";
+        		if (typeof measuresAttr[i]["format"] !== "undefined" && measuresAttr[i]["format"] != "")
+        			mdxMeasuresAsMembers += ", FORMAT_STRING='" + measuresAttr[i]["format"]  + "' ";
+    		}
+     		if(i > 0) mdxMeasuresSet += ", ";
+     		 //mdxMeasuresSet += v[0];
+     		mdxMeasuresSet += "[Measures].[Measure" + i + "]";
       	});
 
     	mdxMeasuresSet += "}";
@@ -471,7 +521,7 @@ bt.Query = function(properties, olapCube) {
 		}
 
 
-    	mdx["sets"].push("set [Measures_Set] as '" + mdxMeasuresSet + "'");
+    	mdx["sets"].push(mdxMeasuresAsMembers + " set [Measures_Set] as '" + mdxMeasuresSet + "'");
 
 
     	mdxSets = [];
@@ -652,15 +702,28 @@ bt.Query = function(properties, olapCube) {
     	var mdxQuery = "with ";
     	mdxQuery += mdx["sets"].join(" ") + " ";
     	mdxQuery += mdx["members"].join(" ") + " ";
-    	mdxQuery += "select" + (settings.nonEmpty.columns ? " NON EMPTY" : "") + " " + mdx["columns"] + " on COLUMNS,";
-    	mdxQuery += (settings.nonEmpty.rows ? " NON EMPTY" : "") + " " + mdx["rows"] + " on ROWS ";
+    	mdxQuery += "select" + (settings.nonEmpty.columns ? " NON EMPTY" : "") + " " + mdx["columns"] + " on COLUMNS ";
+    	if (mdx["rows"] != "")
+    		mdxQuery += ", " + (settings.nonEmpty.rows ? " NON EMPTY" : "") + " " + mdx["rows"] + " on ROWS ";
     	mdxQuery += "from [" + mdx["cube"] + "]";
     	mdxQuery += mdx["slicer"] != "" ? " where (" + mdx["slicer"] + ")" : "";
 
+    	// Replace Internal PlaceHolders
+    	mdxQuery = mdxQuery.replace(/§AllRowsSetNoTotals/g, mdxAxisNoTotals); 
+    	mdxQuery = mdxQuery.replace(/§AllRowsSetNoLastDim/g, mdxAxisNoTotalsNoLastDim); 
 
   	    return mdxQuery;
     }
 
+    myself.getLevelFilterMdx = function(level) {
+    	var mdxQuery = myself.getMdx();
+		//mdxQuery = mdxQuery.replace("set [Measures_Set] as '{}'","member [Measures].[Unique Name] as '" + level + ".CurrentMember.UniqueName'");
+		//mdxQuery = mdxQuery.replace("NON EMPTY [Measures_Set]","NON EMPTY UNION([Measures].[Unique Name], [Measures].Members)");
+		mdxQuery = mdxQuery.replace("set [Measures_Set] as '{}'","member [Measures].[Unique Name] as  'IIf(([Measures].[Fact Count] IS EMPTY), NULL, " + level + ".CurrentMember.UniqueName)'");
+		mdxQuery = mdxQuery.replace("NON EMPTY [Measures_Set]","NON EMPTY [Measures].[Unique Name]");
+
+  	    return mdxQuery;
+    }
 
     myself.putMeasuresOnColumns = function() {
   		settings.measuresOnColumns = true;
@@ -698,11 +761,35 @@ bt.Query = function(properties, olapCube) {
     	return $.map(definition.filters, function(i) {return i[0]});
     }
 
+    myself.getDefinition = function() {
+    	return $.extend(true, {}, definition);
+    }
+
 
     myself.getCube = function() {
     	return definition.cube;
     }
 
+    myself.setFilters = function(filters) {
+    	myself.disableFilters();
+    	definition.filters = filters;
+        initializeFiltersMap(definition.filters);
+    }
+
+    myself.disableFilters = function() {
+    	for(var key in filtersMap.hierarchies) {
+    		var hierarchy = filtersMap.hierarchies[key];
+    		var levels = hierarchy.levels;
+    		$.each(hierarchy.order, function(i, v) {
+    			var level = levels[v];
+    			if(level.filtered) {
+    				level.filtered=false;
+    			}
+    		});
+    	}
+    }
+
+	
     myself.getFilters = function() {
     	var filters = [];
 
@@ -746,6 +833,18 @@ bt.Query = function(properties, olapCube) {
 		}
 
 		return filters;
+    }
+
+    myself.getOrders = function() {
+    	var orders = [];
+
+		if(ordersMap.axes.hasOwnProperty("dimensions")) {
+			var plainOrder = ordersMap.axes.dimensions.by + "::" + ordersMap.axes.dimensions.dir;
+			var order = ["D", plainOrder];
+			orders.push(order);
+		}
+
+		return orders;
     }
 
     myself.getDimensions = function() {
@@ -811,7 +910,7 @@ bt.Query = function(properties, olapCube) {
     	return removable;
     }
 
-    myself.remove = function(qualifiedName, type) {
+    myself.remove = function(qualifiedName, type, measurePos) {
     	var removedElements = undefined;
 
     	var hierarchy = (qualifiedName.split("].[")[0] + "]").replace("]]", "]");
@@ -851,6 +950,8 @@ bt.Query = function(properties, olapCube) {
     		length = indexes.length;
     	} else {
     		index = axisQualifiedNames.indexOf(qualifiedName);
+    		if (type == "M")
+    			index = measurePos;
     		length = 1;
     	}
 
@@ -858,9 +959,11 @@ bt.Query = function(properties, olapCube) {
     		removedElements = axis.splice(index, length);
 
     	myself.clearSort(qualifiedName, (length > 1 ? true : false));
+		if (type == "M")
+			myself.loadMeasuresAttr();
     }
 
-    myself.add = function(newQualifiedName, targetQualifiedName, position, type) {
+    myself.add = function(newQualifiedName, targetQualifiedName, position, type, measurePos) {
     	var hierarchy = (newQualifiedName.split("].[")[0] + "]").replace("]]", "]");
 
     	var axis = [];
@@ -907,12 +1010,18 @@ bt.Query = function(properties, olapCube) {
         	}
     	} else {
     		var elementToInsert = [newQualifiedName, ""];
-        	if(index >= 0) {
+        	if(type == 'M' && measurePos >= 0) {
+        		if(position == 1)
+        			measurePos++;
+        		axis.splice(measurePos, 0, elementToInsert);
+        	} else {
         		if(position == 1)
         			index++;
         		axis.splice(index, 0, elementToInsert);
         	}
     	}
+		if (type == "M")
+			myself.loadMeasuresAttr();
     }
 
     myself.isReplaceable = function(newQualifiedName, oldQualifiedName, type) {
@@ -929,7 +1038,7 @@ bt.Query = function(properties, olapCube) {
     	return replaceable;
     }
 
-    myself.replace = function(newQualifiedName, oldQualifiedName, position, type) {    	
+    myself.replace = function(newQualifiedName, oldQualifiedName, position, type, measurePos) {    	
     	var hasNewPosition = position != null;
     	var closeQualifiedName = hasNewPosition ? position.level : oldQualifiedName;
     	var direction = hasNewPosition ? position.direction : 1;
@@ -952,8 +1061,8 @@ bt.Query = function(properties, olapCube) {
 
     	//console.log("Add " + newQualifiedName + " to the " + (direction == 1 ? "right of " : "left of ") + closeQualifiedName + ". Then remove " + oldQualifiedName);
 
-		myself.add(newQualifiedName, closeQualifiedName, direction, type);
-		myself.remove(oldQualifiedName, type);
+		myself.add(newQualifiedName, closeQualifiedName, direction, type, measurePos);
+		myself.remove(oldQualifiedName, type, measurePos);
 
         if(type != "M") {
             var newLevelHierarchy = (newQualifiedName.split("].[")[0] + "]").replace("]]", "]");
@@ -993,13 +1102,13 @@ bt.Query = function(properties, olapCube) {
 
     var filtersMap = {
     	synchronizedByParameters: true,
-    	hierarchies: []
+    	hierarchies: {}
     };
 
     if(olapCube && olapCube.getStructure()) {
     	var hierarchies = olapCube.getHierarchies();
     	$.each(hierarchies, function(i, v) {
-    		var levels = [];
+    		var levels = {};
     		var order = [];
     		$.each(v.levels, function(j, w) {
     			var qualifiedName = w.qualifiedName;
@@ -1009,10 +1118,11 @@ bt.Query = function(properties, olapCube) {
     				synchronizedByParameters: false,
     				filterMode: "",
     				uniqueNames: false,
-    				members: [],
+    				members: {},
     				filtered: false
     			}
     			order.push(qualifiedName);
+    			//order[qualifiedName]={};
     		});
         	filtersMap.hierarchies[v.qualifiedName] = {
         		levels: levels,
@@ -1022,13 +1132,14 @@ bt.Query = function(properties, olapCube) {
     				synchronizedByParameters: false,
     				filterMode: "",
     				//uniqueNames: false,
-    				members: [],
+    				members: {},
     				filtered: false
         		}
         	}
     	});
     }
 
+    
     var initializeFiltersMap = function(axis) {
 		if(olapCube && olapCube.getStructure()) {
 			$.each(axis, function(i, v) {
@@ -1043,7 +1154,9 @@ bt.Query = function(properties, olapCube) {
 						var calculatedMembers = filtersMap.hierarchies[hrcQn].calculatedMembers;
 						calculatedMembers.initialFilterExpression = fltExpr;
 						calculatedMembers.synchronizedByParameters = synchronizedByParameters;
-						calculatedMembers.filterMode = filterMode;
+						//calculatedMembers.filterMode = filterMode;
+						calculatedMembers.filterMode = filterMode.replace("_un", "");
+						calculatedMembers.uniqueNames = filterMode.indexOf("_un") > -1;
 						calculatedMembers.members = synchronizedByParameters ? [] : membersString.substring(1, membersString.length - 1).split("],[");
 						calculatedMembers.filtered = true;
 					} else {
@@ -1073,6 +1186,10 @@ bt.Query = function(properties, olapCube) {
     	return filtersMap;
     }
 
+    myself.forceFiltersMap = function(newFiltersMap) {
+    	filtersMap = $.extend(true, {}, newFiltersMap);
+    }
+
     myself.synchronizeFiltersWithParameters = function(state) {
     	filtersMap.synchronizedByParameters = state;
     }
@@ -1085,10 +1202,9 @@ bt.Query = function(properties, olapCube) {
     	$.extend(filtersMap.hierarchies[hierarchyQualifiedName].levels[levelQualifiedName], filter);
     }
 
-
     var ordersMap = {
         axes: {},
-        levels: []
+        levels: {}
     };
 
     var initializeOrdersMap = function() {
@@ -1176,6 +1292,81 @@ bt.Query = function(properties, olapCube) {
 	    		delete ordersMap.levels[qualifiedName];
     	}
     }
+
+    /*
+     * HISTORY
+     */
+    myself.saveInHistory = function() {
+    	var def = $.extend(true, {}, definition);
+    	history.push(def);
+    	var fm = $.extend(true, {}, filtersMap);
+    	hstFM.push(fm);
+    	var om = $.extend(true, {}, ordersMap);
+    	hstOM.push(om);
+    }
+
+    myself.restoreHistoryFromSession = function(objName) {
+    	history = JSON.parse(sessionStorage.getItem(objName));
+    	if (history) {
+        	sessionStorage.removeItem(objName);
+        	hstFM = JSON.parse(sessionStorage.getItem(objName + "_FM"));
+        	sessionStorage.removeItem(objName + "_FM");
+        	hstOM = JSON.parse(sessionStorage.getItem(objName + "_OM"));
+        	sessionStorage.removeItem(objName + "_OM");
+    	} else {
+    		history = [];
+    		myself.saveInHistory()
+    	}
+    };
+
+    myself.reset = function() {
+    	definition = $.extend(true, {}, history[0]);
+		while (history.length > 1) 
+			history.pop();
+		
+        initializeFiltersMap(definition.dimensions);
+        initializeFiltersMap(definition.pivotDimensions);
+        initializeFiltersMap(definition.filters);
+
+        filtersMap.synchronizedByParameters = true;
+
+        initializeOrdersMap();
+    }
+
+    myself.restoreFromHistory = function() {
+    	definition = history.pop();
+    	filtersMap = hstFM.pop();
+    	ordersMap = hstOM.pop();
+        myself.loadMeasuresAttr();
+    }
+
+    myself.stepBackHistory = function() {
+    	history.pop();
+    	hstFM.pop();
+    	hstOM.pop();
+        myself.loadMeasuresAttr();
+    }
+
+    myself.hasHistory = function() {
+    	return history.length > 1 ? true : false;
+    }
+
+    myself.getHistory = function() {
+    	return JSON.stringify(history);
+    }
+    
+    myself.getHstFM = function() {
+    	return JSON.stringify(hstFM);
+    }
+    
+    myself.getHstOM = function() {
+    	return JSON.stringify(hstOM);
+    }
+
+    // History initialization
+	var urlQuery = getURLQuery();
+	urlQuery.hasOwnProperty("history") ? myself.restoreHistoryFromSession(urlQuery.history) : myself.saveInHistory();
+	
 
     return myself;
 }

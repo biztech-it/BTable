@@ -49,8 +49,13 @@ bt.helpers = bt.helpers || {};
 		
 		getReadFileServiceUrl: function(path) {
 			return Dashboards.getWebAppPath() + "/plugin/BTable/api/file/read?path=" + path;
-		}
-	};
+		},
+
+		getExploreTemplateRepositoryServiceUrl: function() {
+			return Dashboards.getWebAppPath() + "/plugin/pentaho-cdf-dd/api/resources/explore?fileExtensions=.bttemplate&access=create";
+		}		
+
+};
 
 	obj.util = {
 		getServiceResultEvaluation: function(result) {

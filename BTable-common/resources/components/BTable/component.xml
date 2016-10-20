@@ -34,6 +34,12 @@
 			<Property>hideSpans</Property>
 			<Property>showFilters</Property>
 			<Property>fixedHeader</Property>
+			<Property>showAlarms</Property>
+			<Property>alarms</Property>
+			<Property>template</Property>
+			<Property>showTable</Property>
+			<Property>showZeros</Property>
+			<Property>showToolbar</Property>
 
 			<Definition name="chartDefinition">
 				<Property name="clickAction">cccClickAction</Property>
@@ -55,13 +61,15 @@
         <Implementation>
             <Code src="BTableComponent.js" />
             <Styles>
-                <Style version="1.0" src="lib/btable.css">btable.css</Style>
+				<Style version="1.4.3" src="lib/w2ui/w2ui.min.css">w2ui.min.css</Style>
                 <Style version="1.0" src="lib/jQuery-contextMenu/jquery.contextMenu.css">jquery.contextMenu</Style>
                 <Style version="1.5" src="lib/hynds/jquery.multiselect.filter.css">jquery.multiselect.filter.css</Style>
 				<Style version="1.01" src="lib/jqueryFileTree/jqueryFileTree.css">jqueryFileTree.css</Style>
 				<Style version="2.7" src="lib/jQuery-Impromptu/jquery.impromptu.css">jquery.impromptu.css</Style>
 				<Style version="1.0" src="lib/popup.css">popup.css</Style>
 				<Style version="1.0" src="lib/ext.css">ext.css</Style>
+				<!--Style version="1.4.3" src="lib/jQuery-Dragtable/dragtable.css">dragtable.css</Style-->
+                <Style version="1.0" src="lib/btable.css">btable.css</Style>
             </Styles>
             <Dependencies>
 				<Dependency src="lib/bt.ext.js" version="1.0">bt.ext.js</Dependency>
@@ -77,6 +85,8 @@
 				<Dependency src="lib/form/jquery.form.js" version="3.40">jquery.form.js</Dependency>
 				<Dependency src="lib/jqueryFileTree/jqueryFileTree.js" version="1.01">jqueryFileTree.js</Dependency>
 				<Dependency src="lib/jQuery-Impromptu/jquery.impromptu.js" version="2.7">jquery.impromptu.js</Dependency>
+				<Dependency src="lib/w2ui/w2ui.min.js" version="1.4.3">w2ui.min.js</Dependency>
+				<!--Dependency src="lib/jQuery-Dragtable/jquery.dragtable.js" version="1.0.0">jquery.dragtable.js</Dependency-->
 			</Dependencies>
             <CustomProperties>
                 <DesignerProperty>
@@ -365,6 +375,84 @@
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>				
+                <DesignerProperty>
+                    <Header>
+						<Name>showAlarms</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"true"</DefaultValue>
+						<Description>Show Alarms</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>alarms</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"[]"</DefaultValue>
+						<Description>Alarms</Description>
+						<Tooltip></Tooltip>
+						<InputType>ValuesArray</InputType>
+						<OutputType>Array</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+                        <Name>template</Name>
+                        <Parent>BaseProperty</Parent>
+                        <DefaultValue></DefaultValue>
+                        <Description>Template Path</Description>
+                        <Tooltip></Tooltip>
+                        <InputType>String</InputType>
+                        <OutputType>String</OutputType>
+                        <Order>10</Order>
+                        <Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>showTable</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"true"</DefaultValue>
+						<Description>Show Table</Description>
+						<Tooltip>If false the table div is hidden</Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>showZeros</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"false"</DefaultValue>
+						<Description>Show Zeros</Description>
+						<Tooltip>If true columns with just zeros values are hidden</Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>showToolbar</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"false"</DefaultValue>
+						<Description>Show Toolbar</Description>
+						<Tooltip></Tooltip>
+						<InputType>Boolean</InputType>
+						<OutputType>Boolean</OutputType>
+						<Order>10</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
             </CustomProperties>
         </Implementation>		
 	</Contents>
