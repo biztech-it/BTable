@@ -50,13 +50,15 @@ bt.components.BTable = function(spec) {
 			drillTarget: "NEW_TAB", // NEW_TAB (PUC) | NEW_WINDOW (browser) | SELF
 			renderDashboard: false,
 			showAlarms: true,
-			alarms: [],
-			alarmRules: "",
+			alarmRules: [],
+			inlineCss: [],
 			template:"",
 			updateTemplate: false,
 			showTable: true,
 			showZeros: false,
-			showToolbar: true
+			showToolbar: true,
+			externalCss: ""
+
 	};
 
 	var alarmsDef = '{}';
@@ -672,8 +674,23 @@ bt.components.BTable = function(spec) {
 		var pivotDimensions = $.grep(myself.query.getPivotDimensions(), function(e) {
 			return e[1] != "" && e[0].indexOf("].[") > 0;
 		});
-		var filters = myself.query.getFilters();
-
+		// Filters without levels already in dimension or pivotDimensions
+		var filters = $.grep(myself.query.getFilters(false), function(e) {
+			var qualifiedName = e[0];
+			var idx = -1;
+			for (var i = 0; i < dimensions.length; i++) 
+				if (dimensions[i][0] == qualifiedName) {
+					idx = i;
+					break;
+				}
+			if(idx == -1) 
+				for (var i = 0; i < pivotDimensions.length; i++) 
+					if (pivotDimensions[i][0] == qualifiedName) {
+						idx = i;
+						break;
+				}
+			return (idx == -1)
+		});	
 
 		var html = "";
 
@@ -1052,10 +1069,10 @@ bt.components.BTable = function(spec) {
 				placeholder: $.i18n.prop("filters_manager_form_selector_filter_placeholder"),
 		};
 
-		var createSelectContent = function(levelQualifiedName, isCalculatedMember, level, boundToDashboard, uniqueNames) {
+		var createSelectContent = function(levelQualifiedName, isCalculatedMember, level, boundToDashboard, uniqueNames, useothers) {
 			var html = "";
 
-			var members = isCalculatedMember ? [] : myself.olapCube.getLevelMembers(levelQualifiedName, myself.query.getFilters()).members;
+			var members = isCalculatedMember ? [] : myself.olapCube.getLevelMembers(levelQualifiedName, myself.query.getFilters(true), useothers).members;
 
 			if(uniqueNames) {
 
@@ -1144,9 +1161,10 @@ bt.components.BTable = function(spec) {
 			html += "</div><div id='exceptBox'" + (level.filterMode == "between" ? " style='display:none'" : "") + "><strong>" + $.i18n.prop("filters_manager_form_except") + "</strong> <input type='checkbox' name='except' value='except' " + (level.filterMode == "exclude" ? "checked" : "") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>";
 			html += "</div><div><strong style='font-weight:bold'>" + $.i18n.prop("filters_manager_form_unique_names") + "</strong> <input type='radio' name='uniquenames' value='yes' " + (uniqueNames ? "checked" : "") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_unique_names_yes");
 			html += "<input type='radio' name='uniquenames' value='no' " + (uniqueNames ? "" : "checked") + (boundToDashboard && level.synchronizedByParameters ? " disabled" : "") + "/>" + $.i18n.prop("filters_manager_form_unique_names_no");
+			html += "</div></div><div class='filterModeBar'><div id='useOthersBox'><strong>" + $.i18n.prop("filters_manager_form_useothers") + "</strong> <input type='checkbox' name='useothers' value='useothers' checked />";
 			html += "</div></div><select id='membersSelect' name='membersSelect' multiple='multiple'>";
 
-			html += createSelectContent(levelQualifiedName, qnParts.length < 2, level, boundToDashboard, uniqueNames);
+			html += createSelectContent(levelQualifiedName, qnParts.length < 2, level, boundToDashboard, uniqueNames, true);
 
 			html += "</select>";
 
@@ -1183,13 +1201,17 @@ bt.components.BTable = function(spec) {
 				}
 			});
 
-			$("input:radio[name='uniquenames']").change(function() {
+			var refreshSelection = function() {
 				var isBetweenMode = $("input:radio[name='filter-mode']:checked").val() == 'between';
 				var uniqueNames = false;
 				if($("input:radio[name='uniquenames']:checked").val() == 'yes')
 					uniqueNames = true;
+		        var useOtherFilters = false;
+			    if ($("input:checkbox[name='useothers']").prop('checked')) 
+			        useOtherFilters = true;
+
 				membersSelectObj.multiselect("uncheckAll").multiselectfilter("destroy").multiselect("destroy");
-				membersSelectObj.empty().html(createSelectContent(levelQualifiedName, qnParts.length < 2, level, boundToDashboard, uniqueNames));
+				membersSelectObj.empty().html(createSelectContent(levelQualifiedName, qnParts.length < 2, level, boundToDashboard, uniqueNames, useOtherFilters));
 				membersSelectObj.multiselect(isBetweenMode ? multiselectBetweenModeProperties : multiselectDefaultProperties).multiselectfilter(multiselectfilterDefaultProperties);
 				if(uniqueNames) {
 					membersSelectObj.multiselect({
@@ -1203,6 +1225,14 @@ bt.components.BTable = function(spec) {
 						}
 					});
 				}
+			};
+
+			$("input:checkbox[name='useothers']").change(function() {
+			    refreshSelection();
+			});
+
+			$("input:radio[name='uniquenames']").change(function() {
+			    refreshSelection();
 			});
 
 			$("#update-filter").click(function() {
@@ -1280,7 +1310,7 @@ bt.components.BTable = function(spec) {
 							var membersSelectObj = $("#membersSelect");
 							membersSelectObj.multiselect("uncheckAll").multiselectfilter("destroy").multiselect("destroy");
 
-							membersSelectObj.empty().html(createSelectContent(lvlQn, lvlQn.indexOf("].[") < 0, level, true, uniqueNames));
+							membersSelectObj.empty().html(createSelectContent(lvlQn, lvlQn.indexOf("].[") < 0, level, true, uniqueNames, useOtherFilters));
 							membersSelectObj.multiselect(filterMode == "between" ? multiselectBetweenModeProperties : multiselectDefaultProperties).multiselectfilter(multiselectfilterDefaultProperties);
 
 							if(uniqueNames) {
@@ -1344,7 +1374,7 @@ bt.components.BTable = function(spec) {
 			}
 			var eOpts = $.extend( {}, opts, _opts);
 			opts.params["cube"] = myself.query.getCube();
-			opts.params["properties"] = JSON.stringify(myself.query.getFilters());
+			opts.params["properties"] = JSON.stringify(myself.query.getFilters(false));
 			//opts.params.push("{properties: encodeURIComponent(JSON.stringify(myself.properties)));
 			runEndpoint(
 					pluginId, // Plugin identifier.
@@ -2098,7 +2128,7 @@ bt.components.BTable = function(spec) {
 
 					//console.log(pivotDimensions.toSource());
 
-					var queryFilters = myself.query.getFilters();
+					var queryFilters = myself.query.getFilters(false);
 
 					var dimensions = $.grep(queryFilters, function(f) {
 						var qn = f[0];
@@ -3090,7 +3120,7 @@ bt.components.BTable = function(spec) {
 
 				//console.log(pivotDimensions.toSource());
 
-				var queryFilters = myself.query.getFilters();
+				var queryFilters = myself.query.getFilters(false);
 
 				var dimensions = $.grep(queryFilters, function(f) {
 					var qn = f[0];
@@ -3891,7 +3921,7 @@ bt.components.BTable = function(spec) {
 		BTableObj.dimensions = myself.query.getDimensions();
 		BTableObj.measures = myself.query.getMeasures();
 		BTableObj.pivotDimensions = myself.query.getPivotDimensions();
-		BTableObj.filters = myself.query.getFilters();
+		BTableObj.filters = myself.query.getFilters(false);
 		BTableObj.orderBy = myself.query.getOrders();
 		BTableObj.pivotDimensions = myself.query.getPivotDimensions();
 		BTableObj.measuresOnColumns = querySetting.measuresOnColumns;
@@ -3966,7 +3996,7 @@ bt.components.BTable = function(spec) {
 		BTableObj.dimensions = myself.query.getDimensions();
 		BTableObj.measures = myself.query.getMeasures();
 		BTableObj.pivotDimensions = myself.query.getPivotDimensions();
-		BTableObj.filters = myself.query.getFilters();
+		BTableObj.filters = myself.query.getFilters(false);
 		BTableObj.measuresOnColumns = querySetting.measuresOnColumns;
 		BTableObj.nonEmptyRows = querySetting.nonEmpty.rows;
 		BTableObj.nonEmptyColumns = querySetting.nonEmpty.columns;

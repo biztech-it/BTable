@@ -790,14 +790,16 @@ bt.Query = function(properties, olapCube) {
     }
 
 	
-    myself.getFilters = function() {
+    myself.getFilters = function(forFiltersFiltering) {
     	var filters = [];
-
-		var invalidHierarchies = $.map(myself.getDimensionQualifiedNames(), function(e) {
-			return (e.split("].[")[0] + "]").replace("]]", "]");
-		}).concat($.map(myself.getPivotDimensionQualifiedNames(), function(e) {
-			return (e.split("].[")[0] + "]").replace("]]", "]");
-		}));
+    	var invalidHierarchies = [];
+    	
+    	if (!forFiltersFiltering)
+    		invalidHierarchies = $.map(myself.getDimensionQualifiedNames(), function(e) {
+    			return (e.split("].[")[0] + "]").replace("]]", "]");
+    		}).concat($.map(myself.getPivotDimensionQualifiedNames(), function(e) {
+    			return (e.split("].[")[0] + "]").replace("]]", "]");
+    		}));
 
 		var boundToDashboard = filtersMap.synchronizedByParameters;
 

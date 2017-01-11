@@ -249,8 +249,9 @@ img.unlockedIcon {
 
 .filterModeBar {
 	width: 480px; 
-	margin-bottom: 30px;
+	margin-bottom: 20px;
 }
+
 .filterModeBar div {
 	float: left; 
 	margin-right: 16px;
@@ -318,6 +319,14 @@ img.unlockedIcon {
     font-weight: bold;
 	background-color: #C3D9FF;
 }
+.bTableComponent tr.odd td.pvtsubtotal,
+.bTableComponent tr.even td.pvtsubtotal {
+	font-weight: bold;
+}
+.bTableComponent tr.odd td.pvtgrandtotal,
+.bTableComponent tr.even td.pvtgrandtotal {
+    font-weight: bold;
+}
 
 .bTableComponent table.dataTable.no-footer {
     border-bottom: none;
@@ -331,6 +340,12 @@ img.unlockedIcon {
 	padding: 4px 4px 4px 4px;
 	font-family: Arial, serif;
 	font-size: 12px;
+} 
+.bTableComponent table.dataTable thead th.pvtsubtotal {
+    font-weight: bold;
+} 
+.bTableComponent table.dataTable thead th.pvtgrandtotal {
+    font-weight: bold;
 } 
 .bTableComponent table.dataTable tbody td {
     border: 1px solid #000;

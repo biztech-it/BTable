@@ -197,8 +197,8 @@ bt.olap.OlapCube = function(spec) {
 		return levels;		
 	};	
 	
-	myself.getLevelMembers = function(levelQualifiedName, filters) {
-		return olapUtils.getLevelMembers({level: levelQualifiedName, cube: myself.options.cube, filters: filters});
+	myself.getLevelMembers = function(levelQualifiedName, filters, useothers) {
+		return olapUtils.getLevelMembers({level: levelQualifiedName, cube: myself.options.cube, filters: filters, useothers: useothers});
 	};
 
     myself.initialize();

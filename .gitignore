@@ -13,33 +13,25 @@
 
 *Thumbs.db
 
+BTableCustom/
+**/.DS_Store
+BTable/
+
 
 BTable-pentaho5/bin/
 BTable-pentaho5/dist/
 BTable-pentaho5/runtime-lib/
 BTable-pentaho5/test-lib/
 
-BTable-pentaho5/dashboards/About.*
-BTable-pentaho5/dashboards/Render.*
-
-BTable-pentaho5/endpoints/kettle/getPluginVersion.ktr
-BTable-pentaho5/endpoints/kettle/listCdaDatasources.ktr
-		  
-BTable-pentaho5/resources/components/
-!BTable-pentaho5/resources/components/BTable/lib/bt.helpers.js
-BTable-pentaho5/resources/lang/
-
-BTable-pentaho5/solution/BTable From File*
-
-BTable-pentaho5/src/it/biztech/btable/util/Utils.java
-BTable-pentaho5/src/it/biztech/btable/AccessFileException.java
-BTable-pentaho5/src/it/biztech/btable/BTableDefinition.java
-BTable-pentaho5/src/it/biztech/btable/WritingFileException.java
-
-BTable-pentaho5/static/custom/css/
-BTable-pentaho5/static/custom/img/
-BTable-pentaho5/static/system/img/
+BTable-pentaho7/bin/
+BTable-pentaho7/dist/
+BTable-pentaho7/runtime-lib/
+BTable-pentaho7/test-lib/
 
 BTable-pentaho5/CHANGELOG.txt
 BTable-pentaho5/LICENSE.txt
 BTable-pentaho5/README.md
+
+BTable-pentaho7/CHANGELOG.txt
+BTable-pentaho7/LICENSE.txt
+BTable-pentaho7/README.md

@@ -96,9 +96,9 @@ var BTableComponent = UnmanagedComponent.extend({
 		 * We can have any combination of template and file.
 		 * File has priority on template and components setting have priority on file
 		 */
-		var btdefTmpObj = null;
+		var btdefTemplateObj = null;
 		var btdefFileObj = null;
-		
+
 
 		if(this.file) {
 			var filePath = this.file;
@@ -142,13 +142,13 @@ var BTableComponent = UnmanagedComponent.extend({
 				dataType: "json",
 				success: function(json) {
 					if(json) {
-						btdefTmpObj = json;
+						btdefTemplateObj = json;
 					}
 				},
 				async: false
 			});
 
-			if(btdefTmpObj == null) {			
+			if(btdefTemplateObj == null) {			
 				console.error("ERROR       [BTable: " + this.name + "] Initialization with template has failed!" +
 				" Cause: NON-EXISTING FILE or WRONG PATH or ACCESS DENIED or INVALID CONTENT");
 				fileError = true;
@@ -165,25 +165,42 @@ var BTableComponent = UnmanagedComponent.extend({
 				dataType: "json",
 				success: function(json) {
 					if(json) {
-						btdefTmpObj = json;
+						btdefTemplateObj = json;
 					}
 				},
 				async: false
 			});
 
-			if(btdefTmpObj == null) {			
-				btdefTmpObj = JSON.parse("{\"alarms\": {},\"alarmRules\": {}}");		
+			if(btdefTemplateObj == null) {			
+				templatePath = "/public/BTableCustom/Default.bttemplate";
+				$.ajax({
+					type: "GET",
+					url: bt.helpers.general.getReadFileServiceUrl(templatePath),
+					data: {},
+					dataType: "json",
+					success: function(json) {
+						if(json) {
+							btdefTemplateObj = json;
+						}
+					},
+					async: false
+				});
+
+			}
+
+			if(btdefTemplateObj == null) {			
+				btdefTemplateObj = JSON.parse("{\"alarmRules\": {},\"inlineCss\": {},\"externalCss\": \"\"}");		
 			}
 		}
 
-		if (btdefTmpObj != null || btdefFileObj != null) {
+		if (btdefTemplateObj != null || btdefFileObj != null) {
 			var btdefObj = null;
-			if (btdefTmpObj == null) {
+			if (btdefTemplateObj == null) {
 				btdefObj = btdefFileObj;
 			} else if (btdefFileObj == null) {
-				btdefObj = btdefTmpObj;
+				btdefObj = btdefTemplateObj;
 			} else {
-				btdefObj = $.extend( true, {}, btdefTmpObj, btdefFileObj );
+				btdefObj = $.extend( true, {}, btdefTemplateObj, btdefFileObj );
 			}
 
 			var patches = {};
@@ -215,8 +232,9 @@ var BTableComponent = UnmanagedComponent.extend({
 			this.filters = (btdefObj.hasOwnProperty("filters")) ? applyPatches(btdefObj.filters) : this.filters;
 			this.orderBy = (btdefObj.hasOwnProperty("orderBy")) ? applyPatches(btdefObj.orderBy) : this.orderBy;
 
-			this.alarms = (btdefObj.hasOwnProperty("alarms")) ? btdefObj.alarms : {};
 			this.alarmRules = (btdefObj.hasOwnProperty("alarmRules")) ? btdefObj.alarmRules : {};
+			this.inlineCss = (btdefObj.hasOwnProperty("inlineCss")) ? btdefObj.inlineCss : {};
+			this.externalCss = (btdefObj.hasOwnProperty("externalCss")) ? btdefObj.externalCss : "";
 
 			for(var level in patches) {
 				var newFilter = [level, patches[level]];
@@ -273,13 +291,14 @@ var BTableComponent = UnmanagedComponent.extend({
 			drillTarget: this.drillTarget !== undefined ? this.drillTarget : ((this.drillInPUC === undefined || this.drillInPUC) && typeof top.mantle_openTab !== "undefined" ? "NEW_TAB" : "NEW_WINDOW"),
 			renderDashboard: this.renderDashboard === undefined ? false : this.renderDashboard,
 			showAlarms: this.showAlarms === undefined ? true : this.showAlarms,
-			alarms: this.alarms ? this.alarms : {},
 			alarmRules: this.alarmRules ? this.alarmRules : {},
+			inlineCss: this.inlineCss ? this.inlineCss : {},
 			template: this.template	? this.template	: "",
 			updateTemplate: true,
 			showTable: this.showTable === undefined ? true : this.showTable,
 			showZeros: this.showZeros === undefined ? false : this.showZeros,
-			showToolbar: this.showToolbar === undefined ? false : this.showToolbar
+			showToolbar: this.showToolbar === undefined ? false : this.showToolbar,
+			externalCss: this.externalCss ? this.externalCss : ""
 		});
 
 		if(!this.bTable.olapCube.getStructure()) {
@@ -309,7 +328,7 @@ var BTableComponent = UnmanagedComponent.extend({
 		}
 
 		this.cda.path = bt.helpers.cda.getFilePath(this.catalog, this.jndi);
-		
+
 
 		try{
 			this.block();
@@ -549,39 +568,39 @@ var BTableComponent = UnmanagedComponent.extend({
 //		var oRows = $("#" + myself.htmlObject + " tbody tr");
 //		var hasMoC = this.bTable.query.hasMeasuresOnColumns();	    	
 //		if (hasMoC) {
-//			for (var index = 0; index < myself.rawData.metadata.length; index++) {
-//				var column = myself.rawData.metadata[index].colName;
-//				var isMeasure = (column.indexOf("[Measures]") >= 0);
-//				var coltype = myself.rawData.metadata[index].colType;
-//				format = cellFormats[index];
-//				if(coltype == "numeric" && isMeasure) {
-//					oRows.each(function() {
-//						var aData = oTable.fnGetData(this);
-//						var value = aData[index] == "" ? 0 : parseFloat(aData[index]);
-//						if (format && (typeof value != "undefined" && value !== null)) {
-//							$('td:eq(' + index + ')',this).text(getLocalizedFormattedValue(format,value));
-//						}
-//					});
-//				}
-//			}
+//		for (var index = 0; index < myself.rawData.metadata.length; index++) {
+//		var column = myself.rawData.metadata[index].colName;
+//		var isMeasure = (column.indexOf("[Measures]") >= 0);
+//		var coltype = myself.rawData.metadata[index].colType;
+//		format = cellFormats[index];
+//		if(coltype == "numeric" && isMeasure) {
+//		oRows.each(function() {
+//		var aData = oTable.fnGetData(this);
+//		var value = aData[index] == "" ? 0 : parseFloat(aData[index]);
+//		if (format && (typeof value != "undefined" && value !== null)) {
+//		$('td:eq(' + index + ')',this).text(getLocalizedFormattedValue(format,value));
+//		}
+//		});
+//		}
+//		}
 //		} else {
-//			var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
-//			var measuresAttr = myself.bTable.query.getMeasuresAttr();
-//			oRows.each(function(i, tr) {
-//				var aData = oTable.fnGetData(this);
-//				var splittedValues = aData[index].split("|");
-//				var measureName = splittedValues[0];
-//				var measureIdx = splittedValues[1];
-//				format = formatStrings[myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L")];
-//				if (typeof measuresAttr[measureIdx]["format"] != "undefined" && measuresAttr[measureIdx]["format"] != "") 
-//					format = measuresAttr[measureIdx]["format"];
-//				for (var col = index+1; col < aData.length; col++) {
-//					var value = aData[col] == "" ? 0 : parseFloat(aData[col]);
-//					if (typeof value != "undefined" && value !== null && format) {
-//						$('td:eq(' + col + ')',this).text(getLocalizedFormattedValue(format,value));
-//					}
-//				}
-//			});
+//		var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
+//		var measuresAttr = myself.bTable.query.getMeasuresAttr();
+//		oRows.each(function(i, tr) {
+//		var aData = oTable.fnGetData(this);
+//		var splittedValues = aData[index].split("|");
+//		var measureName = splittedValues[0];
+//		var measureIdx = splittedValues[1];
+//		format = formatStrings[myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L")];
+//		if (typeof measuresAttr[measureIdx]["format"] != "undefined" && measuresAttr[measureIdx]["format"] != "") 
+//		format = measuresAttr[measureIdx]["format"];
+//		for (var col = index+1; col < aData.length; col++) {
+//		var value = aData[col] == "" ? 0 : parseFloat(aData[col]);
+//		if (typeof value != "undefined" && value !== null && format) {
+//		$('td:eq(' + col + ')',this).text(getLocalizedFormattedValue(format,value));
+//		}
+//		}
+//		});
 //		}	
 
 		/* Old urlTemplate code. This needs to be here for backward compatibility */
@@ -594,18 +613,60 @@ var BTableComponent = UnmanagedComponent.extend({
 				eval(f);
 			});
 		}
+		
+		var querySetting = myself.bTable.query.getSettings();
 
+		var pivotSubTotalsCols = [];
+		var pivotGrandTotalCol = - 1;
+		var dimCnt = 0;
+		for(i = 0; i < cd.colHeaders.length; i++) {
+			if (!cd.colHeaders[i].includes('[Measures].['))
+				dimCnt++;
+			if (cd.colHeaders[i].includes('BT_TOTAL'))
+				pivotSubTotalsCols.push(i);
+		}
+		if (querySetting.summary.pivotGrandTotal)
+			pivotGrandTotalCol = cd.colHeaders.length - 1;
+		if ($.inArray(pivotGrandTotalCol,pivotSubTotalsCols) > -1)
+				pivotSubTotalsCols.splice($.inArray(pivotGrandTotalCol,pivotSubTotalsCols),1);
+		
+		var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
+		var hasMoC = this.bTable.query.hasMeasuresOnColumns();
+		if (!hasMoC)
+			dimCnt = index + 1;
+
+		
 		var thead = $("<thead></thead>");
+		//var pivotSubTotalsCols = [];
+		//var pivotGrandTotalCol = -1;
+		//var dimsOffset = 0;
 		for(i = 0; i < this.headerRows.length; i++) {
 			var lastRow = (i == this.headerRows.length - 1) ? true : false;
 			var headerRow = this.headerRows[i];
 			var tr = $("<tr></tr>");
+			//var colCnt = dimsOffset;
 			$.each(headerRow, function(j, col) {
-				if(lastRow) col.index = j;
+				//if (i == 0 && col.rowspan > 1 && col.member != 'BT_TOTAL')
+				//	dimsOffset++;
+				//colCnt += col.colspan;
+				//if (col.member == 'BT_TOTAL') 
+				//	pivotSubTotalsCols.push(colCnt);
+				if(lastRow) {
+					col.index = j;
+				//	if (myself.bTable.properties.pivotGrandTotal && (pivotGrandTotalCol < 0))
+				//		pivotGrandTotalCol = headerRow.length - 1 + dimsOffset;
+				//	if ($.inArray(pivotGrandTotalCol,pivotSubTotalsCols) > -1)
+				//		pivotSubTotalsCols.splice($.inArray(pivotGrandTotalCol,pivotSubTotalsCols),1);
+				}
 				var html = "";
 				html += "<th data-btref='" + JSON.stringify(col) + "'";
 				html += (col.colspan == undefined || col.colspan == 1) ? "" : " colspan='" + col.colspan + "'";
 				html += (col.rowspan == undefined || col.rowspan == 1) ? "" : " rowspan='" + col.rowspan + "'";
+				if (lastRow)
+					if (j == pivotGrandTotalCol - dimCnt) 
+						html += " class=pvtgrandtotal";
+					else if ($.inArray(j + dimCnt,pivotSubTotalsCols) > -1)
+						html += " class=pvtsubtotal";
 				html += ">" + col.caption + "</th>";
 				var th = $(html);
 				tr.append(th);
@@ -634,7 +695,26 @@ var BTableComponent = UnmanagedComponent.extend({
 			}
 		});
 		
-/*
+
+		
+		if (querySetting.summary.pivotSubTotals)
+			for(i = 0; i < pivotSubTotalsCols.length; i++) {
+				//var dims = myself.bTable.query.getDimensions();
+				//var colIdx = pivotSubTotalsCols[i] + dims.length + 1;
+				var colIdx = pivotSubTotalsCols[i] + 1;
+				$("#" + myself.htmlObject + " tr td:nth-child(" + colIdx + ")").each(function () {
+					$(this).addClass("pvtsubtotal")
+				});
+			}
+		if (querySetting.summary.pivotGrandTotal) {
+			//var dims = myself.bTable.query.getDimensions();
+			//var colIdx = pivotGrandTotalCol + dims.length + 1;
+			var colIdx = pivotGrandTotalCol + 1;
+			$("#" + myself.htmlObject + " tr td:nth-child(" + colIdx + ")").each(function () {
+				$(this).addClass("pvtgrandtotal")
+			});
+		}
+		/*
 		oTable.dragtable({
 			persistState: function(table) { 
 			    table.el.find('th').each(function(i) { 
@@ -643,17 +723,15 @@ var BTableComponent = UnmanagedComponent.extend({
 			    alert("persist");
 		    } 
 		  }); 
-*/
-		
+		 */
+
 		/*
 		 * Table PostProcessing: 
 		 * 		- Format Numbers
 		 * 		- Set Alarms
 		 */
-		if(myself.bTable.properties.showAlarms) {
-
-			if(myself.bTable.properties.updateTemplate) {
-				var btdefTmpObj = null;
+			if(myself.bTable.properties.showAlarms && myself.bTable.properties.updateTemplate) {
+				var btdefTemplateObj = null;
 				if(myself.bTable.properties.template) {
 					var templatePath = this.bTable.properties.template;
 					$.ajax({
@@ -663,13 +741,13 @@ var BTableComponent = UnmanagedComponent.extend({
 						dataType: "json",
 						success: function(json) {
 							if(json) {
-								btdefTmpObj = json;
+								btdefTemplateObj = json;
 							}
 						},
 						async: false
 					});
 
-					if(btdefTmpObj == null) {			
+					if(btdefTemplateObj == null) {			
 						console.error("ERROR       [BTable: " + this.name + "] Initialization with template has failed!" +
 						" Cause: NON-EXISTING FILE or WRONG PATH or ACCESS DENIED or INVALID CONTENT");
 						fileError = true;
@@ -686,92 +764,133 @@ var BTableComponent = UnmanagedComponent.extend({
 						dataType: "json",
 						success: function(json) {
 							if(json) {
-								btdefTmpObj = json;
+								btdefTemplateObj = json;
 							}
 						},
 						async: false
 					});
 
-					if(btdefTmpObj == null) {			
-						btdefTmpObj = JSON.parse("{\"alarms\": {},\"alarmRules\": {}}");		
+
+					if(btdefTemplateObj == null) {			
+						templatePath = "/public/BTableCustom/Default.bttemplate";
+						$.ajax({
+							type: "GET",
+							url: bt.helpers.general.getReadFileServiceUrl(templatePath),
+							data: {},
+							dataType: "json",
+							success: function(json) {
+								if(json) {
+									btdefTemplateObj = json;
+								}
+							},
+							async: false
+						});
+
+					}
+
+					if(btdefTemplateObj == null) {			
+						btdefTemplateObj = JSON.parse("{\"alarmRules\": {},\"inlineCss\": {},\"externalCss\": \"\"}");		
 					}
 				}
-				myself.alarms = (btdefTmpObj.hasOwnProperty("alarms")) ? btdefTmpObj.alarms : {};
-				myself.alarmRules = (btdefTmpObj.hasOwnProperty("alarmRules")) ? btdefTmpObj.alarmRules : {};
+				myself.alarmRules = (btdefTemplateObj.hasOwnProperty("alarmRules")) ? btdefTemplateObj.alarmRules : {};
+				myself.inlineCss = (btdefTemplateObj.hasOwnProperty("inlineCss")) ? btdefTemplateObj.inlineCss : {};
+				myself.externalCss = (btdefTemplateObj.hasOwnProperty("externalCss")) ? btdefTemplateObj.externalCss : "";
 				myself.bTable.properties.updateTemplate=false;
 			}
 
-			$("#" + myself.htmlObject).append("<style id='alarmsStylesheet'></style>");
-			$("#alarmsStylesheet").text(this.alarmRules.toString().replace(/,/g , " "));
+			$("#" + myself.htmlObject).prepend("<style scoped id='inlineStylesheet'></style>");
+			$("#" + myself.htmlObject + " #inlineStylesheet").text(this.inlineCss.toString().replace(/,/g , " "));
+			if (myself.externalCss != "") {
+				//$("#" + myself.htmlObject).prepend("<link href='" + myself.externalCss + "' rel='stylesheet' type='text/css' />");
+				$("#" + myself.htmlObject).prepend("<style scoped>@import url(" + myself.externalCss + ");</style>");
+			}
 
-		var oTable = $("#" + myself.htmlObject + " table").dataTable();
-		var oRows = $("#" + myself.htmlObject + " tbody tr");
-		var hasMoC = this.bTable.query.hasMeasuresOnColumns();	    	
-		if (hasMoC) {
-			for (var index = 0; index < myself.rawData.metadata.length; index++) {
-				var column = myself.rawData.metadata[index].colName;
-				var start_pos = column.indexOf("[Measures]");
-				var coltype = myself.rawData.metadata[index].colType;
-				if(start_pos >= 0 && coltype == "numeric") {
-					var end_pos = column.indexOf("]", start_pos+10);
-					var level = column.substring(start_pos,end_pos+1);
-					var alarmsRules = myself.bTable.properties.alarms[level];
-					if (typeof alarmsRules !== "undefined") {
-						var limits = [];
-						var conditions = [];
-						var classes = [];
-							for (var i = 0; i < alarmsRules.length; i++) {
-								limits[i] = alarmsRules[i]["limit"];
-								conditions[i] = alarmsRules[i]["condition"];
-								classes[i] = alarmsRules[i]["alarmClass"];
+			var oTable = $("#" + myself.htmlObject + " table").dataTable();
+			var oRows = $("#" + myself.htmlObject + " tbody tr");
+			var format = "";
+			if (hasMoC) {
+				for (var index = 0; index < myself.rawData.metadata.length; index++) {
+					var column = myself.rawData.metadata[index].colName;
+					var start_pos = column.indexOf("[Measures]");
+					var coltype = myself.rawData.metadata[index].colType;
+			        format = cellFormats[index];
+					if(start_pos >= 0 && coltype == "numeric") {
+						var end_pos = column.indexOf("]", start_pos+10);
+						var level = column.substring(start_pos,end_pos+1);
+						var levelAlarmRules = [];
+						if (myself.bTable.properties.showAlarms)
+							levelAlarmRules = myself.alarmRules[level];
+						if (typeof levelAlarmRules !== "undefined") {
+							var limits = [];
+							var conditions = [];
+							var classes = [];
+							for (var i = 0; i < levelAlarmRules.length; i++) {
+								limits[i] = levelAlarmRules[i]["limit"];
+								conditions[i] = levelAlarmRules[i]["condition"];
+								classes[i] = levelAlarmRules[i]["alarmClass"];
 							}
+						}
 						oRows.each(function(i, v) {
 							var aData = oTable.fnGetData(this);
 							var value = aData[index] == "" ? 0 : parseFloat(aData[index]);
-							for (var i = 0; i < alarmsRules.length; i++) {
-								var expr = value + " " + conditions[i] + " " + limits[i];
-								if (eval(expr)) {
-									$('td:eq(' + index + ')',this).addClass(classes[i]);
-									break;
+			                if (format && (typeof value != "undefined" && value !== null)) {
+			                	$('td:eq(' + index + ')',this).text(getLocalizedFormattedValue(format,value));
+			                }
+							if (typeof levelAlarmRules !== "undefined") {
+								for (var i = 0; i < levelAlarmRules.length; i++) {
+									var expr = value + " " + conditions[i] + " " + limits[i];
+									if (eval(expr)) {
+										$('td:eq(' + index + ')',this).addClass(classes[i]);
+										break;
+									}
 								}
 							}
 						});
 					}
 				}
-			}
-		} else {
-			var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
-			var measuresAttr = myself.bTable.query.getMeasuresAttr();
-			oRows.each(function() {
-				var aData = oTable.fnGetData(this);
-				var splittedValues = oTable.fnGetData(this)[index].split("|");
-				var measureName = splittedValues[0];
-				var measureIdx = splittedValues[1];
-				level = myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L");
-				var alarmsRules = myself.bTable.properties.alarms[level];
-				if (typeof alarmsRules !== "undefined") {
-					var limits = [];
-					var conditions = [];
-					var classes = [];
-					for (var i = 0; i < alarmsRules.length; i++) {
-						limits[i] = alarmsRules[i]["limit"];
-						conditions[i] = alarmsRules[i]["condition"];
-						classes[i] = alarmsRules[i]["alarmClass"];
+			} else {
+				var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
+				var measuresAttr = myself.bTable.query.getMeasuresAttr();
+				oRows.each(function() {
+					var aData = oTable.fnGetData(this);
+					var splittedValues = oTable.fnGetData(this)[index].split("|");
+					var measureName = splittedValues[0];
+					var measureIdx = splittedValues[1];
+			        format = formatStrings[myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L")];
+			        if (typeof measuresAttr[measureIdx]["format"] != "undefined" && measuresAttr[measureIdx]["format"] != "") 
+			        	format = measuresAttr[measureIdx]["format"];
+					level = myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L");
+					var levelAlarmRules = [];
+					if (myself.bTable.properties.showAlarms)
+						levelAlarmRules = myself.bTable.properties.alarmRules[level];
+					if (typeof levelAlarmRules !== "undefined") {
+						var limits = [];
+						var conditions = [];
+						var classes = [];
+						for (var i = 0; i < levelAlarmRules.length; i++) {
+							limits[i] = levelAlarmRules[i]["limit"];
+							conditions[i] = levelAlarmRules[i]["condition"];
+							classes[i] = levelAlarmRules[i]["alarmClass"];
+						}
 					}
 					for (var col = index+1; col < aData.length; col++) {
 						var value = aData[col] == "" ? 0 : aData[col];
-						for (var i = 0; i < alarmsRules.length; i++) {
-							var expr = value + " " + conditions[i] + " " + limits[i];
-							if (eval(expr)) {
-								$('td:eq(' + col + ')',this).addClass(classes[i]);
-								break;
+				        if (typeof value != "undefined" && value !== null && format) {
+							$('td:eq(' + col + ')',this).text(getLocalizedFormattedValue(format,value));
+						}
+						if (typeof levelAlarmRules !== "undefined") {
+							for (var i = 0; i < levelAlarmRules.length; i++) {
+								var expr = value + " " + conditions[i] + " " + limits[i];
+								if (eval(expr)) {
+									$('td:eq(' + col + ')',this).addClass(classes[i]);
+									break;
+								}
 							}
 						}
 					}
-				}
-			});
-		}
-	}
+				});
+			}
+		
 		var zippedRows = myself.bTable.getBodyRowspans();
 		$.each(zippedRows, function(i, arr) {
 			var position = 0;
@@ -785,7 +904,7 @@ var BTableComponent = UnmanagedComponent.extend({
 					$(this).empty();
 			});
 		});
-		
+
 		var index = $.inArray("[Measures].[MeasuresLevel]", $.map(myself.rawData.metadata, function(e){ return e.colName; }));
 		if (index >= 0) {
 			$("#" + myself.htmlObject + " tbody tr td:nth-child(" + (index + 1) + ")").each(function() {
@@ -794,25 +913,25 @@ var BTableComponent = UnmanagedComponent.extend({
 					$(this).html(cellValue.substring(0,cellValue.indexOf("|")));
 			});
 		}
-		
+
 		// Hide Zero Columns and Rows 
 //		if(!myself.bTable.properties.showZeros) {
-//			for (var i = 0; i < unwantedColumns.length; i++) {
-//				//$("#" + myself.htmlObject + " tbody tr td:nth-child(" + (unwantedColumns[i] + 1) + "),th:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
-//				$("#" + myself.htmlObject + " tbody tr td:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
-//				$("#" + myself.htmlObject + " thead tr:last th:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
-//			}
-//			for (var i = 0; i < unwantedRows.length; i++) 
-//					//$("#" + myself.htmlObject + " tbody tr").eq(unwantedRows[i]).hide();
-//					$("#" + myself.htmlObject + " tbody tr").eq(unwantedRows[i]).remove();
-//			$("#" + myself.htmlObject + " tbody").each(function() {        
-//			    $(this).find("tr:visible:even").addClass("even").removeClass("odd");
-//			    $(this).find("tr:visible:odd").addClass("odd").removeClass("even");
-//			});
+//		for (var i = 0; i < unwantedColumns.length; i++) {
+//		//$("#" + myself.htmlObject + " tbody tr td:nth-child(" + (unwantedColumns[i] + 1) + "),th:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
+//		$("#" + myself.htmlObject + " tbody tr td:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
+//		$("#" + myself.htmlObject + " thead tr:last th:nth-child(" + (unwantedColumns[i] + 1) + ")").hide();
+//		}
+//		for (var i = 0; i < unwantedRows.length; i++) 
+//		//$("#" + myself.htmlObject + " tbody tr").eq(unwantedRows[i]).hide();
+//		$("#" + myself.htmlObject + " tbody tr").eq(unwantedRows[i]).remove();
+//		$("#" + myself.htmlObject + " tbody").each(function() {        
+//		$(this).find("tr:visible:even").addClass("even").removeClass("odd");
+//		$(this).find("tr:visible:odd").addClass("odd").removeClass("even");
+//		});
 //		}
 
-		
-		
+
+
 		this.timer.check("Table completely drawn");
 
 		/* Handle post-draw callback the user might have provided */
@@ -861,11 +980,11 @@ var BTableComponent = UnmanagedComponent.extend({
 	 */
 	handleAddIns: function(dataTable, td, $td, rowIdx, colIdx) {
 		var cd = this.chartDefinition,
-		 colType = cd.colTypes[colIdx],
-		 state = {},
-		 target = $td,
-		 results = this.rawData,
-		 addIn = this.getAddIn("colType",colType);
+		colType = cd.colTypes[colIdx],
+		state = {},
+		target = $td,
+		results = this.rawData,
+		addIn = this.getAddIn("colType",colType);
 		if (!addIn) {
 			return false;
 		}
@@ -900,26 +1019,28 @@ var BTableComponent = UnmanagedComponent.extend({
 		extraOptions = {};
 
 		this.timer.check("Query result returned");
-		
+
 		var noResult = json.metadata.length == 0;
-		
+
 		var measuresAttr = myself.bTable.query.getMeasuresAttr();
 		var definition = myself.bTable.query.getDefinition();
 		$.each(myself.rawData.metadata, function (i, v) {
 			var colName = v.colName;
-	    	var startPos = colName.indexOf("[Measures].[Measure");
-	    	if(startPos >= 0 && colName != "[Measures].[MeasuresLevel]") {
-	    		var endPos = colName.indexOf("]", startPos + 19);
-	    		var measureIdx = colName.substring(startPos + 19,endPos);
-	    		v.colName = colName.replace(colName.substring(startPos,endPos + 1),definition.measures[measureIdx][0]);
-	    		v.colMeasureIdx = measureIdx;
-		    	v.colIsCalculated = (definition.measures[measureIdx][1] != "");
-		    	v.colFormat = measuresAttr[measureIdx]["format"];
-	    	}
+			var startPos = colName.indexOf("[Measures].[Measure");
+			if(startPos >= 0 && colName != "[Measures].[MeasuresLevel]") {
+				var endPos = colName.indexOf("]", startPos + 19);
+				var measureIdx = colName.substring(startPos + 19,endPos);
+				v.colName = colName.replace(colName.substring(startPos,endPos + 1),definition.measures[measureIdx][0]);
+				v.colMeasureIdx = measureIdx;
+				v.colIsCalculated = (definition.measures[measureIdx][1] != "");
+				v.colFormat = measuresAttr[measureIdx]["format"];
+			}
 		});
 
 		// Loads Formats
 		var measuresLevelColIdx = $.inArray("[Measures].[MeasuresLevel]", json.metadata.map(function(i){return i.colName}));
+		
+		/*
 		var formatStrings = myself.bTable.olapCube.getFormatStrings();
 		var cellFormats = [];
 		if(measuresLevelColIdx < 0) {
@@ -940,12 +1061,13 @@ var BTableComponent = UnmanagedComponent.extend({
 				}
 			});
 		}
-
+		*/
+		
 		// Set Zeros Rows And Columns and Format numbers 
 		if (!noResult) {
 			var zerosColumns = [];
 			for (var col = 0; col < myself.rawData.resultset[0].length; col++) {
-		    	var isMeasure = myself.rawData.metadata[col].colName.indexOf("[Measures].[") >= 0;
+				var isMeasure = myself.rawData.metadata[col].colName.indexOf("[Measures].[") >= 0;
 				zerosColumns[col]=((measuresLevelColIdx >=0 && col <= measuresLevelColIdx) || (measuresLevelColIdx < 0 && !isMeasure)) ? false : true;
 			}
 			var measuresColumns = zerosColumns.slice();
@@ -954,12 +1076,12 @@ var BTableComponent = UnmanagedComponent.extend({
 				var format = "";
 				if (measuresLevelColIdx >= 0) {
 					var colName = myself.rawData.resultset[row][measuresLevelColIdx];
-			    	var startPos = colName.indexOf("Measure");
-			    	var measureIdx = colName.substring(startPos + 7);
-			    	var qualifiedMeasureName = myself.bTable.properties.measures[measureIdx][0];
-			    	startPos = qualifiedMeasureName.indexOf("[Measures].[");
-			    	var endPos = qualifiedMeasureName.indexOf("]", startPos + 12);
-			    	var measureName = qualifiedMeasureName.substring(startPos + 12,endPos);
+					var startPos = colName.indexOf("Measure");
+					var measureIdx = colName.substring(startPos + 7);
+					var qualifiedMeasureName = myself.bTable.properties.measures[measureIdx][0];
+					startPos = qualifiedMeasureName.indexOf("[Measures].[");
+					var endPos = qualifiedMeasureName.indexOf("]", startPos + 12);
+					var measureName = qualifiedMeasureName.substring(startPos + 12,endPos);
 					format = formatStrings[myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L")];
 				}
 				for (var col = measuresLevelColIdx + 1; col < myself.rawData.resultset[row].length; col++) {
@@ -971,10 +1093,10 @@ var BTableComponent = UnmanagedComponent.extend({
 						if (zerosColumns[col]) {
 							zerosColumns[col]=false;
 						}
-						if (measuresLevelColIdx < 0) 
-							format = cellFormats[col];
-						 myself.rawData.resultset[row][col] = getLocalizedFormattedValue(format,value)
-						
+						//if (measuresLevelColIdx < 0) 
+						//	format = cellFormats[col];
+						//TODO myself.rawData.resultset[row][col] = getLocalizedFormattedValue(format,value)
+
 					}
 				}
 				if (rowIsZeros && !myself.bTable.properties.showZeros)
@@ -995,9 +1117,9 @@ var BTableComponent = UnmanagedComponent.extend({
 				});
 			}
 		}
-		
+
 		this.timer.check("Numbers formatted and zeros deleted");
-		
+
 		json = myself.bTable.normalizeCdaJson(json);
 
 		this.ph.trigger('cdfTableComponentProcessResponse');    
@@ -1047,12 +1169,12 @@ var BTableComponent = UnmanagedComponent.extend({
 			{
 				dtData.aaData.slice( i , 1);
 			}
-			*/
+			 */
 		}
 
 		this.ph.html("<table id='" + this.htmlObject + "Table' class='tableComponent' width='100%'></table>");
 		this.dataTable = $("#"+this.htmlObject+'Table').dataTable(dtData);
-		
+
 		if(noResult) 
 			$("#"+this.htmlObject+'Table td.dataTables_empty').html($.i18n.prop("table_no_data"));
 
@@ -1097,7 +1219,7 @@ var BTableComponent = UnmanagedComponent.extend({
 				}
 			}      
 		});
-		
+
 		myself.ph.trigger('cdfTableComponentFinishRendering');
 
 

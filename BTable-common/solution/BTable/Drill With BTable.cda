@@ -14,43 +14,43 @@
          <Jndi>SampleData</Jndi>
       </Connection>
    </DataSources>
-   <DataAccess access="public" cache="true" cacheDuration="3600" connection="mdx_years"
-               id="mdx_years"
-               type="mdx">
+   <DataAccess access="public" connection="mdx_years" id="mdx_years" type="mdx">
+      <Name>mdx_years</Name>
       <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
       <Columns/>
       <Parameters/>
-      <Query>with 
+      <Query><![CDATA[with 
 set [Time_Years_Set] as 'Union([Time].[All Years], {[Time].[Years].Members})' 
 set [Measures_Set] as '{[Measures].[Sales]}' 
 select NON EMPTY [Measures_Set] on COLUMNS, 
 NON EMPTY [Time_Years_Set] on ROWS 
-from [SteelWheelsSales]</Query>
+from [SteelWheelsSales]]]></Query>
    </DataAccess>
-   <DataAccess access="public" cache="true" cacheDuration="3600" connection="mdx_totals"
-               id="mdx_totals"
-               type="mdx">
+   <DataAccess access="public" connection="mdx_totals" id="mdx_totals" type="mdx">
+      <Name>mdx_totals</Name>
       <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
       <Columns/>
       <Parameters>
          <Parameter default="" name="YEAR" type="String"/>
       </Parameters>
-      <Query>select NON EMPTY {[Measures].[Sales], [Measures].[Quantity]} on COLUMNS
+      <Query><![CDATA[select NON EMPTY {[Measures].[Sales], [Measures].[Quantity]} on COLUMNS
 from [SteelWheelsSales]
-where ([Time].[${YEAR}])</Query>
+where ([Time].[${YEAR}])]]></Query>
    </DataAccess>
-   <DataAccess access="public" cache="true" cacheDuration="3600"
-               connection="mdx_salesByMarket"
-               id="mdx_salesByMarket"
+   <DataAccess access="public" connection="mdx_salesByMarket" id="mdx_salesByMarket"
                type="mdx">
+      <Name>mdx_salesByMarket</Name>
       <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
       <Columns/>
       <Parameters>
          <Parameter default="" name="YEAR" type="String"/>
       </Parameters>
-      <Query>select NON EMPTY {[Measures].[Sales]} on COLUMNS,
+      <Query><![CDATA[select NON EMPTY {[Measures].[Sales]} on COLUMNS,
 NON EMPTY {[Markets].[Territory].Members} on ROWS 
 from [SteelWheelsSales]
-where ([Time].[${YEAR}])</Query>
+where ([Time].[${YEAR}])]]></Query>
    </DataAccess>
 </CDADescriptor>

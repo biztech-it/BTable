@@ -1,6 +1,6 @@
 <project name="BTable" basedir="." default="help">
 	<description>BTable</description>
-	
+
 	<target name="help">
 		<echo>------------------------------------------</echo>
 		<echo>|                 BTable                 |</echo>
@@ -9,24 +9,40 @@
 		<echo>------------------------------------------</echo>
 		<echo>|  by Biz Tech  |  www.biztech.it/btable |</echo>
 		<echo>------------------------------------------</echo>
-		<echo></echo>
+		<echo>
+		</echo>
 		<echo>TARGETS:</echo>
-		<echo></echo>
+		<echo>
+		</echo>
 		<echo>* copy-common-to-pentaho5</echo>
-		<echo></echo>
+		<echo>
+		</echo>
+		<echo>* copy-common-to-pentaho7</echo>
+		<echo>
+		</echo>
 		<echo>* copy-common</echo>
 		<echo>    1) copy-common-to-pentaho5</echo>
-		<echo></echo>
+		<echo>    1) copy-common-to-pentaho7</echo>
+		<echo>
+		</echo>
 		<echo>* dist-pentaho5</echo>
 		<echo>    1) copy-common-to-pentaho5</echo>
 		<echo>    2) BTable-pentaho5/build.xml -> dist</echo>
-		<echo></echo>
+		<echo>
+		</echo>
+		<echo>* dist-pentaho7</echo>
+		<echo>    1) copy-common-to-pentaho7</echo>
+		<echo>    2) BTable-pentaho7/build.xml -> dist</echo>
+		<echo>
+		</echo>
 		<echo>* dist</echo>
-		<echo>    1) copy-common</echo>
-		<echo>    2) dist-pentaho</echo>
+		<echo>    1) dist-pentaho5</echo>
+		<echo>    1) dist-pentaho7</echo>
+		<echo>
+		</echo>
 	</target>
-	
-    <target name="copy-common-to-pentaho5">
+
+	<target name="copy-common-to-pentaho5">
 		<copy todir="BTable-pentaho5" failonerror="true" overwrite="true">
 			<fileset dir="BTable-common">
 				<include name="**/*" />
@@ -39,17 +55,71 @@
 				<include name="README.md" />
 			</fileset>
 		</copy>
-    </target>
-	
-    <target name="copy-common">
-        <ant target="copy-common-to-pentaho5" />
-    </target>
+	</target>
 
-    <target name="dist-pentaho5" depends="copy-common-to-pentaho5">
-		<ant dir="BTable-pentaho5" antfile="build.xml" target="dist" inheritAll="true"/>
-    </target>
+	<target name="copy-common-to-pentaho7">
+		<copy todir="BTable-pentaho7" failonerror="true" overwrite="true">
+			<fileset dir="BTable-common">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		<copy todir="BTable-pentaho7" failonerror="true" overwrite="true">
+			<fileset dir=".">
+				<include name="CHANGELOG.txt" />
+				<include name="LICENSE.txt" />
+				<include name="README.md" />
+			</fileset>
+		</copy>
+	</target>
 
-    <target name="dist" depends="copy-common">
-        <ant target="dist-pentaho5" />
-    </target>	
+	<target name="copy-common">
+		<ant target="copy-common-to-pentaho5" />
+		<ant target="copy-common-to-pentaho7" />
+	</target>
+
+	<target name="dist-pentaho5" depends="copy-common-to-pentaho5">
+		<ant dir="BTable-pentaho5" antfile="build.xml" target="dist" inheritAll="true" />
+	</target>
+
+	<target name="dist-pentaho7" depends="copy-common-to-pentaho7">
+		<ant dir="BTable-pentaho7" antfile="build.xml" target="dist" inheritAll="true" />
+	</target>
+
+	<target name="dist" depends="copy-common">
+		<ant target="dist-pentaho5" />
+		<ant target="dist-pentaho7" />
+	</target>
+
+	<target name="clean4Git">
+		<delete verbose="true">
+			<fileset dir="BTable-pentaho5">
+				<present present="both" targetdir="BTable-common" />
+			</fileset>
+		</delete>
+		<delete includeemptydirs="true" verbose="true">
+			<fileset dir="BTable-pentaho5">
+				<and>
+					<size value="0" />
+					<type type="dir" />
+				</and>
+			</fileset>
+		</delete>
+		<ant dir="BTable-pentaho5" antfile="build.xml" target="clean" inheritAll="true" />
+
+		<delete verbose="true">
+			<fileset dir="BTable-pentaho7">
+				<present present="both" targetdir="BTable-common" />
+			</fileset>
+		</delete>
+		<delete includeemptydirs="true" verbose="true">
+			<fileset dir="BTable-pentaho7">
+				<and>
+					<size value="0" />
+					<type type="dir" />
+				</and>
+			</fileset>
+		</delete>
+		<ant dir="BTable-pentaho7" antfile="build.xml" target="clean" inheritAll="true" />
+	</target>
+
 </project>

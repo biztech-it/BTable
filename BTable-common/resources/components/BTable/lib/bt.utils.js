@@ -174,8 +174,10 @@ bt.utils.OlapUtils = function(spec) {
 			summary: {},
 			orders: []
 		}, olapCube);
-		//var mdxQuery = "with member [Measures].[Unique Name] as '" + level + ".CurrentMember.UniqueName' select distinct(" + level + ".Members) on Rows, {[Measures].[Unique Name]} ON Columns from [" + cube + "]"; 
-		var mdxQuery = query.getLevelFilterMdx(level);
+		
+		var mdxQuery = "with member [Measures].[Unique Name] as '" + level + ".CurrentMember.UniqueName' select distinct(" + level + ".Members) on Rows, {[Measures].[Unique Name]} ON Columns from [" + cube + "]"; 
+		if (_args.useothers)
+			mdxQuery = query.getLevelFilterMdx(level);
 
 		var params = {
 				path: bt.helpers.cda.getFilePath(myself.options.catalog, myself.options.jndi),

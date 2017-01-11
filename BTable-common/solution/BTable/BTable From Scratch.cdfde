@@ -1,0 +1,415 @@
+{
+ "components": {
+  "rows": [
+   {
+    "id": "GENERIC",
+    "name": "Generic",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "type": "Label",
+      "value": "Generic"
+     }
+    ],
+    "type": "Label",
+    "typeDesc": "<i>Group</i>"
+   },
+   {
+    "id": "7881796f-8eee-4b3f-fc73-7eecc2adf134",
+    "parent": "GENERIC",
+    "properties": [
+     {
+      "name": "name",
+      "type": "Id",
+      "value": "market"
+     },
+     {
+      "name": "propertyValue",
+      "type": "String",
+      "value": "EMEA"
+     },
+     {
+      "name": "parameterViewRole",
+      "type": "parameterViewRoleCustom",
+      "value": "unused"
+     },
+     {
+      "name": "bookmarkable",
+      "type": "Boolean",
+      "value": "false"
+     },
+     {
+      "name": "public",
+      "value": "false",
+      "type": "Boolean"
+     }
+    ],
+    "type": "ComponentsParameter",
+    "typeDesc": "Simple parameter"
+   },
+   {
+    "id": "COMMUNITYCOMPONENTS",
+    "name": "Community Contributions",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "Group",
+      "type": "Label",
+      "value": "Community Contributions"
+     }
+    ],
+    "type": "Label",
+    "typeDesc": "<i>Group</i>"
+   },
+   {
+    "id": "bdfaefef-e908-ff48-5694-66b92e4b2ae1",
+    "parent": "COMMUNITYCOMPONENTS",
+    "properties": [
+     {
+      "name": "name",
+      "type": "Id",
+      "value": "btable"
+     },
+     {
+      "name": "expandContainerObject",
+      "type": "String",
+      "value": ""
+     },
+     {
+      "name": "catalog",
+      "type": "MondrianCatalog",
+      "value": "mondrian:/SteelWheels"
+     },
+     {
+      "name": "cube",
+      "type": "String",
+      "value": "SteelWheelsSales"
+     },
+     {
+      "name": "dimensions",
+      "type": "ValuesArray",
+      "value": "[[\"[Product].[Line]\",\"\"]]"
+     },
+     {
+      "name": "file",
+      "type": "String",
+      "value": ""
+     },
+     {
+      "name": "filters",
+      "type": "ValuesArray",
+      "value": "[[\"[Markets].[Territory]\",\"include:market\"]]"
+     },
+     {
+      "name": "fixedHeader",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "grandTotal",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "hideSpans",
+      "type": "Boolean",
+      "value": "false"
+     },
+     {
+      "name": "jndi",
+      "type": "Jndi",
+      "value": "SampleData"
+     },
+     {
+      "name": "measures",
+      "type": "ValuesArray",
+      "value": "[[\"[Measures].[Sales]\",\"\"],[\"[Measures].[Quantity]\",\"\"]]"
+     },
+     {
+      "name": "measuresOnColumns",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "nonEmptyColumns",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "nonEmptyRows",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "orderBy",
+      "type": "ValuesArray",
+      "value": "[]"
+     },
+     {
+      "name": "pivotDimensions",
+      "type": "ValuesArray",
+      "value": "[[\"[Time].[Years]\",\"include_un:[[Time].[2004]]\"],[\"[Time].[Quarters]\",\"\"],[\"MEASURES\",\"\"]]"
+     },
+     {
+      "name": "pivotGrandTotal",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "pivotSubTotals",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "showAlarms",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "showFilters",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "showTable",
+      "value": "true",
+      "type": "Boolean"
+     },
+     {
+      "name": "showToolbar",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "showZeros",
+      "value": "false",
+      "type": "Boolean"
+     },
+     {
+      "name": "subTotals",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "tableSettingsFromFile",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "template",
+      "value": "",
+      "type": "String"
+     },
+     {
+      "name": "listeners",
+      "type": "Listeners",
+      "value": "[]"
+     },
+     {
+      "name": "oLanguage",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "expandParameters",
+      "type": "ValuesArray",
+      "value": "[]"
+     },
+     {
+      "name": "displayLength",
+      "type": "Integer",
+      "value": ""
+     },
+     {
+      "name": "expandOnClick",
+      "type": "Boolean",
+      "value": "false"
+     },
+     {
+      "name": "filter",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "info",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "lengthChange",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "paginate",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "colSearchable",
+      "type": "Array",
+      "value": "[]"
+     },
+     {
+      "name": "drawCallback",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "sDom",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "priority",
+      "type": "Integer",
+      "value": 5
+     },
+     {
+      "name": "refreshPeriod",
+      "type": "Integer",
+      "value": ""
+     },
+     {
+      "name": "paginationType",
+      "type": "PaginationType",
+      "value": "two_button"
+     },
+     {
+      "name": "tableStyle",
+      "type": "TableStyle",
+      "value": "themeroller"
+     },
+     {
+      "name": "htmlObject",
+      "type": "HtmlObject",
+      "value": "${p:btableHtmlObj}"
+     },
+     {
+      "name": "executeAtStart",
+      "type": "Boolean",
+      "value": "true"
+     },
+     {
+      "name": "paginateServerside",
+      "type": "Boolean",
+      "value": "false"
+     },
+     {
+      "name": "preExecution",
+      "type": "JavaScript",
+      "value": "function f() {\n    this.exportStyle = { //table style for Excel\n        rules: [\n            {selector: \"th\", properties: [{name: \"border\", value: \"1px solid #000\"}, {name: \"background-color\", value: \"#A2E069\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td\", properties: [{name: \"border\", value: \"1px solid #000\"}]},\n            {selector: \"tbody tr.odd td\", properties: [{name: \"background-color\", value: \"#FFFFFF\"}]},\n            {selector: \"tbody tr.even td\", properties: [{name: \"background-color\", value: \"#E8E8E8\"}]},\n            {selector: \"td.string\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td.numeric\", properties: [{name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \"td.subtotal\", properties: [{name: \"font-weight\", value: \"bold\"}]},\n            {selector: \"tr.odd td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \"tr.even td.grandtotal\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"background-color\", value: \"#A2E069\"}]},\n            {selector: \".filtersTitle\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"black\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".hierarchy\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#437C0D\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".separator\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"color\", value: \"#437C0D\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".level\", properties: [{name: \"font-weight\", value: \"bold\"}, {name: \"color\", value: \"#D1380E\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]},\n            {selector: \".filter\", properties: [{name: \"font-weight\", value: \"normal\"}, {name: \"font-family\", value: \"Arial, serif\"}, {name: \"font-size\", value: \"9pt\"}]}\n    \t]\n\t};\n}"
+     },
+     {
+      "name": "postExecution",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "postFetch",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "preChange",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "postChange",
+      "type": "JavaScript",
+      "value": ""
+     },
+     {
+      "name": "extraOptions",
+      "type": "OptionArray",
+      "value": "[]"
+     },
+     {
+      "name": "tooltip",
+      "type": "Html",
+      "value": ""
+     },
+     {
+      "name": "clickAction",
+      "type": "JavaScript",
+      "value": ""
+     }
+    ],
+    "type": "ComponentsBTableComponent",
+    "typeDesc": "BTable (by Biz Tech)"
+   }
+  ]
+ },
+ "datasources": {
+  "rows": []
+ },
+ "filename": "/public/plugin-samples/BTable/BTable+From+Scratch.cdfde",
+ "layout": {
+  "rows": [
+   {
+    "id": "64bbf8a3-c1eb-0fe2-c3e9-9f413dbfad3e",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "type": "Id",
+      "value": "btableStyle"
+     },
+     {
+      "name": "resourceCode",
+      "type": "Resource",
+      "value": ".container {margin-top: 20px; margin-bottom: 20px;}\n\n/******************** FILTERS PANEL ********************/\n.filtersPanel {margin-bottom: 10px;}\n.filtersPanel .filtersTitle {font-weight: bold; color: black;}\n.filtersPanel .hierarchy {font-weight: bold;color: #437C0D;}\n.filtersPanel .separator {font-weight: normal;color: #437C0D;}\n.filtersPanel .level {font-weight: bold; color: #D1380E;}\n.filtersPanel .filter {font-weight: normal;}\n\n/************************* TABLE ***********************/\n.bTableComponent .dataTables_wrapper {min-height:0;}\n.bTableComponent table {border-collapse: collapse;}\n.bTableComponent th {border: 1px solid #000; background-color: #A2E069; font-family: Arial, serif; font-size: 12px;}\n.bTableComponent td {border: 1px solid #000; padding: 4px 4px 4px 4px;}\n.bTableComponent tbody tr.odd td {background-color: #FFFFFF;}\n.bTableComponent tbody tr.even td {background-color: #E8E8E8;}\n.bTableComponent td.string {font-family: Arial, serif; font-size: 12px;}\n.bTableComponent td.numeric {font-family: Arial, serif; font-size: 12px; white-space: nowrap;}\n.bTableComponent td.subtotal {font-weight: bold;}\n.bTableComponent tr.even td.grandtotal, \n.bTableComponent tr.odd td.grandtotal {font-weight: bold; background-color: #A2E069;}\n.bTableComponent table.dataTable.no-footer {border-bottom: none;}\n.bTableComponent table.dataTable {box-sizing: border-box;}\n.bTableComponent table.dataTable thead th {border: 1px solid #000; background-color: #A2E069; padding: 4px 4px 4px 4px; font-family: Arial, serif; font-size: 12px;}\n.bTableComponent table.dataTable tbody td {border: 1px solid #000; padding: 4px 4px 4px 4px;} \n\n\n/************************* TABLE ***********************/\n.toolbarPanel {background-color: #A2E069;}\n "
+     },
+     {
+      "name": "resourceType",
+      "type": "Label",
+      "value": "Css"
+     }
+    ],
+    "type": "LayoutResourceCode",
+    "typeDesc": "Resource"
+   },
+   {
+    "id": "bb3c4260-034f-5861-36df-a8ddb2e8d0e6",
+    "parent": "UnIqEiD",
+    "properties": [
+     {
+      "name": "name",
+      "type": "Id",
+      "value": "btableHtmlObj"
+     },
+     {
+      "name": "height",
+      "type": "Integer",
+      "value": ""
+     },
+     {
+      "name": "backgroundColor",
+      "type": "Color",
+      "value": ""
+     },
+     {
+      "name": "roundCorners",
+      "type": "RoundCorners",
+      "value": ""
+     },
+     {
+      "name": "textAlign",
+      "type": "TextAlign",
+      "value": ""
+     },
+     {
+      "name": "cssClass",
+      "type": "String",
+      "value": ""
+     }
+    ],
+    "type": "LayoutRow",
+    "typeDesc": "Row"
+   }
+  ],
+  "title": "CDF - Sample structure"
+ }
+}

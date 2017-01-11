@@ -36,6 +36,9 @@
 			<Property>fixedHeader</Property>
 			<Property>showAlarms</Property>
 			<Property>alarms</Property>
+			<Property>alarmRules</Property>
+			<Property>inlineCss</Property>
+			<Property>externalCss</Property>
 			<Property>template</Property>
 			<Property>showTable</Property>
 			<Property>showZeros</Property>
@@ -98,7 +101,7 @@
                         <Tooltip></Tooltip>
                         <InputType>String</InputType>
                         <OutputType>String</OutputType>
-                        <Order>10</Order>
+                        <Order>12</Order>
                         <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -111,7 +114,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>12</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>				
@@ -124,7 +127,7 @@
                         <Tooltip>Catalog</Tooltip>
                         <InputType>MondrianCatalog</InputType>
                         <OutputType>String</OutputType>
-                        <Order>10</Order>
+                        <Order>14</Order>
                         <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -137,7 +140,7 @@
                         <Tooltip>Jndi</Tooltip>
                         <InputType>Jndi</InputType>
                         <OutputType>String</OutputType>
-                        <Order>10</Order>
+                        <Order>15</Order>
                         <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -150,7 +153,7 @@
                         <Tooltip>Cube</Tooltip>
                         <InputType>String</InputType>
                         <OutputType>String</OutputType>
-                        <Order>10</Order>
+                        <Order>16</Order>
                         <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -163,7 +166,7 @@
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>17</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -176,7 +179,7 @@
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>18</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -189,7 +192,7 @@
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>19</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -202,7 +205,7 @@
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>20</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -215,7 +218,7 @@
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>21</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -228,7 +231,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -241,7 +244,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -254,7 +257,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -267,7 +270,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>32</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -280,7 +283,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>30</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -293,7 +296,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>36</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -306,7 +309,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>34</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -332,7 +335,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>				
@@ -345,7 +348,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -358,7 +361,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -371,7 +374,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>				
@@ -384,7 +387,20 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>60</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+						<Name>alarmRules</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"[]"</DefaultValue>
+						<Description>Alarm Rules</Description>
+						<Tooltip></Tooltip>
+						<InputType>ValuesArray</InputType>
+						<OutputType>Array</OutputType>
+						<Order>60</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -393,12 +409,39 @@
 						<Name>alarms</Name>
 						<Parent>BaseProperty</Parent>
 						<DefaultValue>"[]"</DefaultValue>
-						<Description>Alarms</Description>
+						<Description>Alarms(Depr)</Description>
 						<Tooltip></Tooltip>
 						<InputType>ValuesArray</InputType>
 						<OutputType>Array</OutputType>
-						<Order>10</Order>
+						<Order>100</Order>
 						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+
+                <DesignerProperty>
+                    <Header>
+						<Name>inlineCss</Name>
+						<Parent>BaseProperty</Parent>
+						<DefaultValue>"[]"</DefaultValue>
+						<Description>Inline Css</Description>
+						<Tooltip></Tooltip>
+						<InputType>ValuesArray</InputType>
+						<OutputType>Array</OutputType>
+						<Order>60</Order>
+						<Version>1.0</Version>
+                    </Header>
+                </DesignerProperty>
+                <DesignerProperty>
+                    <Header>
+                        <Name>externalCss</Name>
+                        <Parent>BaseProperty</Parent>
+                        <DefaultValue></DefaultValue>
+                        <Description>External Css</Description>
+                        <Tooltip></Tooltip>
+                        <InputType>String</InputType>
+                        <OutputType>String</OutputType>
+                        <Order>60</Order>
+                        <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
                 <DesignerProperty>
@@ -410,7 +453,7 @@
                         <Tooltip></Tooltip>
                         <InputType>String</InputType>
                         <OutputType>String</OutputType>
-                        <Order>10</Order>
+                        <Order>59</Order>
                         <Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -423,7 +466,7 @@
 						<Tooltip>If false the table div is hidden</Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -436,7 +479,7 @@
 						<Tooltip>If true columns with just zeros values are hidden</Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
@@ -449,7 +492,7 @@
 						<Tooltip></Tooltip>
 						<InputType>Boolean</InputType>
 						<OutputType>Boolean</OutputType>
-						<Order>10</Order>
+						<Order>50</Order>
 						<Version>1.0</Version>
                     </Header>
                 </DesignerProperty>
