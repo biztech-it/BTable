@@ -862,7 +862,7 @@ var BTableComponent = UnmanagedComponent.extend({
 					level = myself.bTable.olapCube.getQualifiedNameByCaption(measureName, "L");
 					var levelAlarmRules = [];
 					if (myself.bTable.properties.showAlarms)
-						levelAlarmRules = myself.bTable.properties.alarmRules[level];
+						levelAlarmRules = myself.alarmRules[level];
 					if (typeof levelAlarmRules !== "undefined") {
 						var limits = [];
 						var conditions = [];
@@ -1065,6 +1065,7 @@ var BTableComponent = UnmanagedComponent.extend({
 		
 		// Set Zeros Rows And Columns and Format numbers 
 		if (!noResult) {
+			var formatStrings = myself.bTable.olapCube.getFormatStrings();
 			var zerosColumns = [];
 			for (var col = 0; col < myself.rawData.resultset[0].length; col++) {
 				var isMeasure = myself.rawData.metadata[col].colName.indexOf("[Measures].[") >= 0;
