@@ -414,7 +414,7 @@ bt.Query = function(properties, olapCube) {
 
 					if(mdxConditions.length > 0) {
 						mdxNamedSet = "Filter(" + mdxNamedSet + ", ";
-						mdxNamedSet += "(" + mdxConditions.join(" AND ") + ")";
+						mdxNamedSet += "((" + mdxConditions.join(" AND ") + "))";
 						mdxNamedSet += ")";
 					}
 				}
@@ -551,7 +551,7 @@ bt.Query = function(properties, olapCube) {
 
 					if(mdxConditions.length > 0) {
 						mdxNamedSet = "Filter(" + mdxNamedSet + ", ";
-						mdxNamedSet += "(" + mdxConditions.join(" AND ") + ")";
+						mdxNamedSet += "((" + mdxConditions.join(" AND ") + "))";
 						mdxNamedSet += ")";
 					}
 				}
@@ -674,7 +674,7 @@ bt.Query = function(properties, olapCube) {
 
 					if(mdxConditions.length > 0) {
 						mdxNamedSet = "Filter(" + mdxNamedSet + ", ";
-						mdxNamedSet += "(" + mdxConditions.join(" AND ") + ")";
+						mdxNamedSet += "((" + mdxConditions.join(" AND ") + "))";
 						mdxNamedSet += ")";
 					}
 				}
