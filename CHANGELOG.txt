@@ -1,5 +1,12 @@
 CHANGELOG
 ---------
+v3.x.1 []
+
+	BUG FIXES:
+		* Unable to remove measures in case of pivot dimensions (2016.02.25)
+		* Wrong MDX in case of filters in more than 2 level inside one common hierarchy (2016.02.21)
+
+
 v3.x [2016.10.20]
 
 	NEW FEATURES:

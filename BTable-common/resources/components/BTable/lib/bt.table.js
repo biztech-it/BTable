@@ -330,13 +330,13 @@ bt.components.BTable = function(spec) {
 					splittedHeader[0] += "]";
 					if (splittedHeader[0].indexOf("[Measures]") >= 0)
 						splittedHeader[0] += "|"+v.colMeasureIdx;
-					for(j = 1; j < length-1; j++) {
-						splittedHeader[j] = "[" + splittedHeader[j] + "]";
-						if (splittedHeader[j].indexOf("[Measures]") >= 0)
+					for(j = 1; j < length; j++) {
+						splittedHeader[j] = "[" + splittedHeader[j];
+						if (splittedHeader[j].indexOf("[Measures]") >= 0) 
 							splittedHeader[j] += "|"+v.colMeasureIdx;
-
+						else if (j != length - 1)
+							splittedHeader[j] = splittedHeader[j] + "]"; 
 					}
-					splittedHeader[length-1] = "[" + splittedHeader[length-1];
 				} else if (splittedHeader[0].indexOf("[Measures]") >= 0 && splittedHeader[0] != "[Measures].[MeasuresLevel]")
 					splittedHeader[0] += "|"+v.colMeasureIdx;
 
@@ -457,12 +457,13 @@ bt.components.BTable = function(spec) {
 					splittedHeader[0] += "]";
 					if (splittedHeader[0].indexOf("[Measures]") >= 0)
 						splittedHeader[0] += "|"+v.colMeasureIdx;
-					for(j = 1; j < length-1; j++) {
-						splittedHeader[j] = "[" + splittedHeader[j] + "]";
-						if (splittedHeader[j].indexOf("[Measures]") >= 0)
+					for(j = 1; j < length; j++) {
+						splittedHeader[j] = "[" + splittedHeader[j];
+						if (splittedHeader[j].indexOf("[Measures]") >= 0) 
 							splittedHeader[j] += "|"+v.colMeasureIdx;
+						else if (j != length - 1)
+							splittedHeader[j] = splittedHeader[j] + "]"; 
 					}
-					splittedHeader[length-1] = "[" + splittedHeader[length-1];
 				} else if (splittedHeader[0].indexOf("[Measures]") >= 0)
 					splittedHeader[0] += "|"+v.colMeasureIdx;
 
