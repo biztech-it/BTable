@@ -3,8 +3,9 @@ CHANGELOG
 v3.x.1 []
 
 	BUG FIXES:
-		* Unable to remove measures in case of pivot dimensions (2016.02.25)
-		* Wrong MDX in case of filters in more than 2 level inside one common hierarchy (2016.02.21)
+		* Problem with Export To Excel after styling features adds (2017.03.11)
+		* Unable to remove measures in case of pivot dimensions (2017.02.25)
+		* Wrong MDX in case of filters in more than 2 level inside one common hierarchy (2017.02.21)
 
 
 v3.x [2016.10.20]

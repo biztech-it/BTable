@@ -3697,6 +3697,9 @@ bt.components.BTable = function(spec) {
 		setExportStyle(myself.properties.exportStyle);
 		tmpObj.find("img").remove();
 		tmpObj.find("div[id$='_fixedHeader']").remove();
+		tmpObj.find("#BTableHtmlObjectToolbarPanel").remove();
+		tmpObj.find("#inlineStylesheet").remove();
+		tmpObj.find("#externalCss").remove();
 		var tmpHtml = tmpObj.html();
 		tmpObj.remove();
 		window.open("data:application/vnd.ms-excel," + encodeURIComponent(tmpHtml));

@@ -798,11 +798,13 @@ var BTableComponent = UnmanagedComponent.extend({
 				myself.bTable.properties.updateTemplate=false;
 			}
 
+			if (myself.inlineCss != "") {
 			$("#" + myself.htmlObject).prepend("<style scoped id='inlineStylesheet'></style>");
 			$("#" + myself.htmlObject + " #inlineStylesheet").text(this.inlineCss.toString().replace(/,/g , " "));
+			}
 			if (myself.externalCss != "") {
 				//$("#" + myself.htmlObject).prepend("<link href='" + myself.externalCss + "' rel='stylesheet' type='text/css' />");
-				$("#" + myself.htmlObject).prepend("<style scoped>@import url(" + myself.externalCss + ");</style>");
+				$("#" + myself.htmlObject).prepend("<style scoped id='externalCss'>@import url(" + myself.externalCss + ");</style>");
 			}
 
 			var oTable = $("#" + myself.htmlObject + " table").dataTable();
