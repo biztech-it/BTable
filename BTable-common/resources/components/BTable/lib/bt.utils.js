@@ -373,6 +373,10 @@ function getLocalizedFormattedValue(formatString, valueString) {
 		return isNaN(n) || n == 0;
 	};
 
+	if (formatString === undefined) {
+		return valueString;
+	}
+
 	switch(formatString.toLowerCase()) {
 	case "": return valueString;
 	case "none": return valueString;
